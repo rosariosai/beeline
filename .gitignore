@@ -1,0 +1,9 @@
+node_modules
+dist
+release
+server/.env
+server/secrets/
+vite.config.ts.timestamp-*
+.DS_Store
+*.log
+coverage/

@@ -1,0 +1,41 @@
+{
+  "name": "bookmarkonly",
+  "version": "2.5.1",
+  "homepage": "https://github.com/rosariosai/beeline",
+  "repository": { "type": "git", "url": "git+https://github.com/rosariosai/beeline.git" },
+  "bugs": { "url": "https://github.com/rosariosai/beeline/issues" },
+  "private": true,
+  "description": "Beeline: a visual bookmark dashboard for the New Tab page (Chrome, Brave, Firefox). Local-first, no accounts, no tracking.",
+  "license": "MIT",
+  "author": "Rosario Savoia",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch --mode chrome",
+    "build:chrome": "vite build --mode chrome",
+    "build:firefox": "vite build --mode firefox",
+    "build": "npm run build:chrome && npm run build:firefox",
+    "zip": "npm run build && node scripts/zip.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "idb": "^8.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "archiver": "^7.0.1",
+    "axe-core": "^4.14.0",
+    "fake-indexeddb": "^6.0.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0",
+    "vitest": "^2.0.5"
+  }
+}

@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beeline — Visual Bookmark Dashboard</title>
+  <meta name="description" content="Visual bookmark dashboard for Chrome, Brave and Firefox. Local-first, private, open source.">
+  <style>
+    /* CSS Reset & Design Tokens */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --bg-base: #0e1015;
+      --bg-surface: #151821;
+      --bg-surface-elevated: #1c202c;
+      --bg-surface-subtle: #242938;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text-main: #f0f3f8;
+      --text-muted: #9da4b4;
+      --text-faint: #687182;
+      --accent-blue: #3b82f6;
+      --accent-blue-hover: #2563eb;
+      --accent-amber: #f59e0b;
+      --tag-bg: rgba(59, 130, 246, 0.15);
+      --tag-text: #60a5fa;
+      --code-bg: #0a0c10;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      --max-width: 1080px;
+      --transition: 0.2s ease;
+    }
+
+    [data-theme="light"] {
+      --bg-base: #f6f8fb;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f4f9;
+      --bg-surface-subtle: #e5eaf2;
+      --border-subtle: rgba(0, 0, 0, 0.08);
+      --border-strong: rgba(0, 0, 0, 0.16);
+      --text-main: #131720;
+      --text-muted: #535d70;
+      --text-faint: #8a94a6;
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-amber: #d97706;
+      --tag-bg: #e0edff;
+      --tag-text: #1d4ed8;
+      --code-bg: #eaeff7;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      transition: opacity var(--transition);
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Top Navigation */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background-color: rgba(14, 16, 21, 0.85);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background-color var(--transition), border-color var(--transition);
+    }
+    [data-theme="light"] .site-nav {
+      background-color: rgba(246, 248, 251, 0.88);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      text-decoration: none;
+    }
+    .brand:hover {
+      text-decoration: none;
+    }
+
+    .brand-logo-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      background: #facc15;
+      font-size: 1.25rem;
+      box-shadow: 0 2px 6px rgba(250, 204, 21, 0.25);
+    }
+
+    .version-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-link {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+    }
+    .nav-link:hover {
+      color: var(--text-main);
+      text-decoration: none;
+      background: var(--bg-surface-elevated);
+    }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 7px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all var(--transition);
+    }
+    .theme-toggle-btn:hover {
+      background: var(--bg-surface-subtle);
+      border-color: var(--border-strong);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-decoration: none;
+      transition: all var(--transition);
+    }
+    .btn:hover {
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    .btn-primary:hover {
+      background-color: var(--accent-blue-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-surface-elevated);
+      color: var(--text-main);
+      border-color: var(--border-subtle);
+    }
+    .btn-secondary:hover {
+      background-color: var(--bg-surface-subtle);
+      border-color: var(--border-strong);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 48px 0 36px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-size: 2.25rem;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+      color: var(--text-main);
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 620px;
+      margin: 0 auto 28px;
+      font-weight: 400;
+    }
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    .hero-preview {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow-lg);
+      background: #000;
+    }
+
+    .hero-preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Section Shared Styling */
+    .section {
+      padding: 64px 0;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .section-header {
+      margin-bottom: 36px;
+    }
+
+    .section-tag {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-blue);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .section-desc {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 640px;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .feature-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: border-color var(--transition);
+    }
+    .feature-card:hover {
+      border-color: var(--border-strong);
+    }
+
+    .feature-image-wrap {
+      background: #000;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .feature-image-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .feature-body {
+      padding: 24px;
+    }
+
+    .feature-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .feature-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Compatibility Table */
+    .compat-table-wrap {
+      overflow-x: auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .compat-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    .compat-table th, .compat-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .compat-table th {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .compat-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .badge-works {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+    }
+    [data-theme="light"] .badge-works {
+      background: #e7f9ee;
+      color: #15803d;
+    }
+
+    .badge-untested {
+      background: rgba(234, 179, 8, 0.15);
+      color: #facc15;
+    }
+    [data-theme="light"] .badge-untested {
+      background: #fef9c3;
+      color: #a16207;
+    }
+
+    .badge-planned {
+      background: rgba(148, 163, 184, 0.15);
+      color: #94a3b8;
+    }
+    [data-theme="light"] .badge-planned {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    /* Mobile Concept Block */
+    .mobile-concept-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .mobile-previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      justify-items: center;
+    }
+
+    .mobile-phone-frame {
+      max-width: 260px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 3px solid var(--border-strong);
+      box-shadow: var(--shadow-md);
+      background: #000;
+    }
+    .mobile-phone-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .mobile-caption {
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* Requirements & Permissions */
+    .req-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .req-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+
+    .req-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .req-body {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Install Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition);
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .tab-pane {
+      display: none;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .install-steps {
+      list-style-position: inside;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .install-step-item {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .install-step-item strong {
+      color: var(--text-main);
+    }
+
+    .code-snippet {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--code-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      margin-top: 8px;
+      font-family: monospace;
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    .copy-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-surface-subtle);
+    }
+
+    .store-badge-placeholder {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface-subtle);
+      border: 1px dashed var(--border-strong);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Tips and Tricks Grid */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .tip-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .tip-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-elevated);
+      color: var(--accent-amber);
+      flex-shrink: 0;
+    }
+
+    .tip-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .tip-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    /* Roadmap */
+    .roadmap-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .roadmap-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+    }
+
+    .roadmap-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      flex-shrink: 0;
+    }
+
+    .roadmap-text {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* Privacy Banner */
+    .privacy-box {
+      background: var(--bg-surface);
+      border-left: 4px solid #10b981;
+      border: 1px solid var(--border-subtle);
+      border-left-width: 4px;
+      border-left-color: #10b981;
+      border-radius: var(--radius-md);
+      padding: 24px;
+    }
+
+    .privacy-text {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* FAQ Accordion */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .faq-question {
+      width: 100%;
+      text-align: left;
+      padding: 18px 20px;
+      background: none;
+      border: none;
+      color: var(--text-main);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-icon {
+      font-size: 1.1rem;
+      color: var(--text-faint);
+      transition: transform var(--transition);
+    }
+
+    .faq-answer {
+      padding: 0 20px 18px 20px;
+      color: var(--text-muted);
+      font-size: 0.93rem;
+      display: none;
+      line-height: 1.6;
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    /* Site Footer */
+    .site-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 48px 0;
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-note {
+      color: var(--text-faint);
+      font-size: 0.8rem;
+    }
+
+    /* Responsive Breakpoints */
+    @media (min-width: 640px) {
+      .hero-title {
+        font-size: 2.75rem;
+      }
+      .req-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .tips-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .footer-inner {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .hero-title {
+        font-size: 3.25rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .tips-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header class="site-nav">
+    <div class="container nav-inner">
+      <a href="#" class="brand">
+        <span class="brand-logo-icon">🐝</span>
+        <span>beeline</span>
+        <span class="version-pill">v2.5.1 beta</span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="#install" class="nav-link">Install</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+        <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span>
+          <span id="themeLabel">Light</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Section 1: Hero -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-badge">Local-First · MIT Licence · Open Source</div>
+        <h1 class="hero-title">Your bookmarks,<br>one beeline away.</h1>
+        <p class="hero-subtitle">
+          A visual bookmark dashboard that replaces the New Tab page in Chrome, Brave and Firefox.
+          No accounts, no server, no tracking.
+        </p>
+
+        <div class="hero-cta">
+          <a href="#install" class="btn btn-primary">
+            <span>Install</span>
+            <span>↓</span>
+          </a>
+          <!-- PLACEHOLDER LINK: Replace with your actual GitHub repository URL -->
+          <a href="https://github.com/rosariosai/beeline" target="_blank" rel="noopener" class="btn btn-secondary">
+            <span>Source on GitHub</span>
+            <span>↗</span>
+          </a>
+        </div>
+
+        <div class="hero-preview">
+          <!-- Main Hero Screenshot -->
+          <img src="assets/01-dashboard-dark.png" alt="Beeline dark mode dashboard showing preferred bookmarks and Work and Learning groups" width="1440" height="900" loading="eager">
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: What It Does -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Features</span>
+          <h2 class="section-title">What it does</h2>
+          <p class="section-desc">Six simple ways Beeline keeps your frequently visited sites organized and accessible.</p>
+        </div>
+
+        <div class="feature-grid">
+          <!-- Feature 1 -->
+          <article class="feature-card">
+            <div class="feature-image-wrap">
+              <img src="assets/01-dashboard-dark.png" alt="Preferred Launchpad row in Beeline" width="1440" height="900" loading="lazy">
+            </div>
+            <div class="feature-body">
+              <h3 class="feature-title">Preferred launchpad</h3>
+              <p class="feature-text">Mark key bookmarks as Preferred to display them in a dedicated high-priority row right at the top of every new tab.</p>
+            </div>
+          </article>
+
+          <!-- Feature 2 -->
+          <article class="feature-card">
+            <div class="feature-image-wrap">
+              <img src="assets/02-dashboard-light.png" alt="Groups with colors and emoji in light mode" width="1440" height="900" loading="lazy">
+            </div>
+            <div class="feature-body">
+              <h3 class="feature-title">Groups with colours and emoji</h3>
+              <p class="feature-text">Organize bookmarks into visual categories such as Work, Reading, Learning, and Fun with distinct color bars and emoji labels.</p>
+            </div>
+          </article>
+
+          <!-- Feature 3 -->
+          <article class="feature-card">
+            <div class="feature-image-wrap">
+              <img src="assets/04-list-layout-dark.png" alt="Horizontal list layout of bookmarks" width="1440" height="900" loading="lazy">
+            </div>
+            <div class="feature-body">
+              <h3 class="feature-title">Tiles, list or icons</h3>
+              <p class="feature-text">Switch display density between large touch tiles, compact horizontal lists, or minimal icon matrices to fit your screen size.</p>
+            </div>
+          </article>
+
+          <!-- Feature 4 -->
+          <article class="feature-card">
+            <div class="feature-image-wrap">
+              <img src="assets/03-raw-view-numbers-dark.png" alt="Flat no boxes view with indexed numbers" width="1440" height="900" loading="lazy">
+            </div>
+            <div class="feature-body">
+              <h3 class="feature-title">Flat "No boxes" view with numbers</h3>
+              <p class="feature-text">Remove enclosing cards and display quick numeric badges on every icon for instant keyboard-driven jumping.</p>
+            </div>
+          </article>
+
+          <!-- Feature 5 -->
+          <article class="feature-card">
+            <div class="feature-image-wrap">
+              <img src="assets/06-search-dark.png" alt="Search results highlighting matched bookmark terms" width="1440" height="900" loading="lazy">
+            </div>
+            <div class="feature-body">
+              <h3 class="feature-title">Fast search and tags</h3>
+              <p class="feature-text">Press "/" to focus search instantly across titles, addresses, and custom tags with highlighted match segments.</p>
+            </div>
+          </article>
+
+          <!-- Feature 6 -->
+          <article class="feature-card">
+            <div class="feature-image-wrap">
+              <img src="assets/11-hidden-shown-dark.png" alt="Revealing hidden bookmarks with the eye indicator" width="1440" height="900" loading="lazy">
+            </div>
+            <div class="feature-body">
+              <h3 class="feature-title">Hide and unhide</h3>
+              <p class="feature-text">Stow away rare links or sensitive workspaces. Toggle the eye button in the top bar to reveal or conceal them on demand.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mobile Concept Block -->
+    <section class="section">
+      <div class="container">
+        <div class="mobile-concept-card">
+          <div class="section-header" style="margin-bottom: 20px;">
+            <span class="section-tag">Mobile</span>
+            <h2 class="section-title">Phone version planned</h2>
+            <p class="section-desc">Screens below show the current prototype concept. A completely dedicated small-screen layout is currently in design.</p>
+          </div>
+
+          <div class="mobile-previews">
+            <div>
+              <div class="mobile-phone-frame">
+                <img src="assets/12-narrow-phone-width-dark.png" alt="Dark theme phone layout concept" width="390" height="844" loading="lazy">
+              </div>
+              <p class="mobile-caption">Dark mode (concept)</p>
+            </div>
+
+            <div>
+              <div class="mobile-phone-frame">
+                <img src="assets/13-narrow-drawer-dark.png" alt="Mobile navigation drawer concept" width="390" height="844" loading="lazy">
+              </div>
+              <p class="mobile-caption">Sidebar drawer (concept)</p>
+            </div>
+
+            <div>
+              <div class="mobile-phone-frame">
+                <img src="assets/14-narrow-phone-width-light.png" alt="Light theme phone layout concept" width="390" height="844" loading="lazy">
+              </div>
+              <p class="mobile-caption">Light mode (concept)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Works In -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Compatibility</span>
+          <h2 class="section-title">Works in</h2>
+          <p class="section-desc">Honest, tested support across current desktop web browsers.</p>
+        </div>
+
+        <div class="compat-table-wrap">
+          <table class="compat-table">
+            <thead>
+              <tr>
+                <th>Browser</th>
+                <th>Status</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Google Chrome</strong></td>
+                <td><span class="badge-status badge-works">Supported</span></td>
+                <td>Tested in daily use. Installs as an unpacked extension for now; store listing coming.</td>
+              </tr>
+              <tr>
+                <td><strong>Brave</strong></td>
+                <td><span class="badge-status badge-works">Supported</span></td>
+                <td>Tested in daily use. Uses the same build as Chrome.</td>
+              </tr>
+              <tr>
+                <td><strong>Microsoft Edge & Chromium</strong></td>
+                <td><span class="badge-status badge-untested">Should work</span></td>
+                <td>Shares Chrome extension build. Should work cleanly, but not actively tested.</td>
+              </tr>
+              <tr>
+                <td><strong>Mozilla Firefox</strong></td>
+                <td><span class="badge-status badge-works">Supported</span></td>
+                <td>Firefox 128 or newer. Less tested than Chrome and Brave. Temporary install or signed add-on. Automatic file sync not supported; use backup and import.</td>
+              </tr>
+              <tr>
+                <td><strong>Apple Safari</strong></td>
+                <td><span class="badge-status badge-planned">Not supported yet</span></td>
+                <td>Safari extension structure requires native wrapper.</td>
+              </tr>
+              <tr>
+                <td><strong>Phones & Tablets</strong></td>
+                <td><span class="badge-status badge-planned">Not supported yet</span></td>
+                <td>A mobile version is planned; no release date set.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Requirements -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Specifications</span>
+          <h2 class="section-title">Requirements & Permissions</h2>
+          <p class="section-desc">Lightweight by design. No background daemons and no account systems.</p>
+        </div>
+
+        <div class="req-grid">
+          <div class="req-card">
+            <h3 class="req-title">Browser Version</h3>
+            <p class="req-body">A current release of Chrome, Brave, or Firefox (version 128 or newer). Nothing else to install.</p>
+          </div>
+
+          <div class="req-card">
+            <h3 class="req-title">Source Builds</h3>
+            <p class="req-body">If building directly from source code, Node.js version 20 or newer is required.</p>
+          </div>
+
+          <div class="req-card">
+            <h3 class="req-title">Optional Permission: Bookmarks</h3>
+            <p class="req-body">Requested only when you click "Import my browser bookmarks" to read your existing tree into Beeline.</p>
+          </div>
+
+          <div class="req-card">
+            <h3 class="req-title">Optional Permission: Favicon</h3>
+            <p class="req-body">Used solely to display local site icons from your browser cache for matching bookmark URLs.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Install -->
+    <section id="install" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Setup</span>
+          <h2 class="section-title">Install</h2>
+          <p class="section-desc">Step-by-step instructions to load Beeline in your desktop browser.</p>
+        </div>
+
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="tab-chrome">Chrome & Brave</button>
+          <button class="tab-btn" data-tab="tab-firefox">Firefox</button>
+          <button class="tab-btn" data-tab="tab-source">From source</button>
+        </div>
+
+        <div id="tab-chrome" class="tab-pane active">
+          <ol class="install-steps">
+            <li class="install-step-item">
+              <strong>Open extensions page:</strong> Navigate to <code>chrome://extensions</code> (or <code>brave://extensions</code>).
+            </li>
+            <li class="install-step-item">
+              <strong>Enable Developer mode:</strong> Toggle the switch in the top-right corner of the page.
+            </li>
+            <li class="install-step-item">
+              <strong>Load extension:</strong> Click <strong>Load unpacked</strong> and select the <code>dist/chrome</code> folder.
+            </li>
+            <li class="install-step-item">
+              <strong>Open a new tab:</strong> Beeline will now load as your default new tab page.
+            </li>
+          </ol>
+          <div class="store-badge-placeholder">
+            <span>ℹ️</span>
+            <span>Extension store listings coming soon (Chrome Web Store).</span>
+          </div>
+        </div>
+
+        <div id="tab-firefox" class="tab-pane">
+          <ol class="install-steps">
+            <li class="install-step-item">
+              <strong>Open debugging:</strong> Type <code>about:debugging</code> into the Firefox address bar and press Enter.
+            </li>
+            <li class="install-step-item">
+              <strong>Select runtime:</strong> Click <strong>This Firefox</strong> in the left sidebar menu.
+            </li>
+            <li class="install-step-item">
+              <strong>Load add-on:</strong> Click <strong>Load Temporary Add-on…</strong> and select <code>manifest.json</code> in <code>dist/firefox</code>.
+            </li>
+            <li class="install-step-item">
+              <strong>Note on temporary loads:</strong> Firefox forgets temporary add-ons when the browser closes. Signed builds will be published with store listings.
+            </li>
+          </ol>
+          <div class="store-badge-placeholder">
+            <span>ℹ️</span>
+            <span>Firefox Add-ons store listing coming soon.</span>
+          </div>
+        </div>
+
+        <div id="tab-source" class="tab-pane">
+          <ol class="install-steps">
+            <li class="install-step-item">
+              <strong>Clone repository and install dependencies:</strong>
+              <div class="code-snippet">
+                <span>git clone https://github.com/rosariosai/beeline.git &amp;&amp; cd beeline &amp;&amp; npm install</span>
+                <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone https://github.com/rosariosai/beeline.git && cd beeline && npm install')">Copy</button>
+              </div>
+            </li>
+            <li class="install-step-item">
+              <strong>Build production packages:</strong>
+              <div class="code-snippet">
+                <span>npm run build</span>
+                <button class="copy-btn" onclick="navigator.clipboard.writeText('npm run build')">Copy</button>
+              </div>
+            </li>
+            <li class="install-step-item">
+              <strong>Load compiled build:</strong> Point your browser to <code>dist/chrome</code> or <code>dist/firefox</code>.
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Tips and Tricks -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Productivity</span>
+          <h2 class="section-title">Tips and tricks</h2>
+          <p class="section-desc">Handy shortcuts, organization workflows, and power features built into Beeline.</p>
+        </div>
+
+        <div class="tips-grid">
+          <div class="tip-card">
+            <div class="tip-icon">🎛️</div>
+            <div>
+              <h3 class="tip-title">Quick looks</h3>
+              <p class="tip-desc">Switch between Classic, Compact, and Dense presets instantly from the View menu.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🔢</div>
+            <div>
+              <h3 class="tip-title">Maximum density</h3>
+              <p class="tip-desc">Set Bookmarks to Icons, Groups to "No boxes", Size to Small, and show Numbers for an ultra-compact dashboard.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">⌨️</div>
+            <div>
+              <h3 class="tip-title">Jump by number</h3>
+              <p class="tip-desc">Type any badge number directly into the search bar to jump immediately to that bookmark.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🔍</div>
+            <div>
+              <h3 class="tip-title">Press "/" to search</h3>
+              <p class="tip-desc">Tap the forward slash key anywhere on the page to instantly focus the search input.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">⭐</div>
+            <div>
+              <h3 class="tip-title">Preferred bookmarks</h3>
+              <p class="tip-desc">Check "Preferred" in any bookmark edit dialog to pin it to the prominent top launchpad row.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🚀</div>
+            <div>
+              <h3 class="tip-title">Promote whole groups</h3>
+              <p class="tip-desc">Promote an entire group directly into the Preferred row from its group action menu.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">⏳</div>
+            <div>
+              <h3 class="tip-title">Hide until a date</h3>
+              <p class="tip-desc">Temporarily hide bookmarks or groups and set them to reappear automatically on a target date.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🌐</div>
+            <div>
+              <h3 class="tip-title">Browser-specific groups</h3>
+              <p class="tip-desc">Organize bookmarks into "Top Chrome", "Top Brave", or "Top Firefox" groups shown only in that respective browser.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">⇄</div>
+            <div>
+              <h3 class="tip-title">Drag to swap positions</h3>
+              <p class="tip-desc">Drag any bookmark onto another card to cleanly swap places in your visual layout.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🔄</div>
+            <div>
+              <h3 class="tip-title">Single-file cloud sync</h3>
+              <p class="tip-desc">Keep Chrome and Brave synchronized through one local file stored in your cloud drive (Google Drive, Dropbox, Syncthing).</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">💾</div>
+            <div>
+              <h3 class="tip-title">Backup before replacing</h3>
+              <p class="tip-desc">Always export a JSON backup file before running "Replace everything" during imports.</p>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🔌</div>
+            <div>
+              <h3 class="tip-title">Extensions manager link</h3>
+              <p class="tip-desc">The built-in Personal extensions button opens your browser's extensions page so you can reload Beeline after an update.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Future</span>
+          <h2 class="section-title">Roadmap</h2>
+          <p class="section-desc">Active development priorities with no artificial deadlines.</p>
+        </div>
+
+        <div class="roadmap-list">
+          <div class="roadmap-item">
+            <div class="roadmap-dot"></div>
+            <div class="roadmap-text">Dedicated phone layout redesign</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot"></div>
+            <div class="roadmap-text">Web version for phones and mobile browsers</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot"></div>
+            <div class="roadmap-text">Official extension store listings (Chrome Web Store &amp; Firefox Add-ons)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7: Privacy -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Local only</span>
+          <h2 class="section-title">Privacy</h2>
+        </div>
+
+        <div class="privacy-box">
+          <p class="privacy-text">
+            Everything stays in your browser. All bookmarks, group settings, tags, and preferences are stored exclusively inside your extension's private browser storage on this computer. Beeline makes zero network requests and does not transmit data to any server, except when you click a bookmark to open its destination website. Read our full <a href="#privacy-policy">privacy page (placeholder)</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8: FAQ -->
+    <section id="faq" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Questions</span>
+          <h2 class="section-title">Frequently asked questions</h2>
+        </div>
+
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Where is my data stored?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              Only in this browser, inside this extension's private local storage on your computer. It is not synced to external cloud databases, not uploaded, and not shared.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>How do I move my bookmarks to a new computer?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              Open the Import and Export modal in Beeline settings, click "Download backup (.json)", and save the file. On your new computer, install Beeline and choose "Import from a file…" to restore all groups, icons, tags, and layout settings.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Why does Firefox forget the add-on?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              When loaded via <code>about:debugging</code> as a temporary add-on, Firefox is designed to automatically unload it whenever the browser is fully closed. A permanent signed Firefox add-on package will be published once store listings launch.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Is there a mobile version?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              Not currently supported. A dedicated mobile phone layout and a standalone web version for phone browsers are on the development roadmap.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Can I import my existing browser bookmarks?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              Yes. Click the Import button and choose either "Import my browser bookmarks" to pull directly from your browser, or import a standard bookmarks HTML export file from Chrome, Firefox, Edge, or Safari.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>How do I delete everything?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              You can wipe all data at any time from the Beeline settings dialog, or simply uninstall the extension from your browser's extensions management page, which instantly removes all local storage data.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Section 9: Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>
+        <p>Released under the <strong>MIT Licence</strong>.</p>
+        <p class="footer-note">Beeline version: <strong>v2.5.1 beta</strong></p>
+      </div>
+
+      <div class="footer-links">
+        <!-- PLACEHOLDER LINKS: Replace with your actual URLs -->
+        <a href="https://github.com/rosariosai/beeline" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://example.com/blog" target="_blank" rel="noopener">Blog (placeholder)</a>
+        <a href="#install">Install Guide</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Light/Dark Toggle & Tab Logic -->
+  <script>
+    // Theme toggle
+    const themeBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
+    const htmlElem = document.documentElement;
+
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = htmlElem.getAttribute('data-theme');
+      if (currentTheme === 'dark') {
+        htmlElem.setAttribute('data-theme', 'light');
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Dark';
+      } else {
+        htmlElem.setAttribute('data-theme', 'dark');
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'Light';
+      }
+    });
+
+    // Install Tabs
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+
+        button.classList.add('active');
+        const targetId = button.getAttribute('data-tab');
+        document.getElementById(targetId).classList.add('active');
+      });
+    });
+
+    // FAQ Accordion
+    const faqButtons = document.querySelectorAll('.faq-question');
+    faqButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        item.classList.toggle('open');
+      });
+    });
+  </script>
+</body>
+</html>
