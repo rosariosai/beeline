@@ -2,7 +2,7 @@
 source: claude
 date: 2026-11-01
 status: draft
-summary: How to install Beeline (v2.5.1) in Chrome, Brave and Firefox, how to update it, how to sync between browsers, and a tour of every feature.
+summary: How to install Beeline (v2.5.2) in Chrome, Brave and Firefox, how to update it, how to sync between browsers, and a tour of every feature.
 tags: [tilenest, bookmarks, install, chrome, brave, firefox]
 ---
 # Installing Beeline (formerly Tilenest Bookmarks)

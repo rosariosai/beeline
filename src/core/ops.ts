@@ -246,7 +246,7 @@ export function ensureExtensionLinks(s: DataState, now: number, showFor?: Browse
  */
 export const DOC_LINKS: { id: string; url: string; old: string[]; title: string }[] = [
   { id: 'doc-link-github', url: 'https://github.com/rosariosai/beeline', old: ['https://github.com/your-name/beeline'], title: 'Beeline documentation (GitHub)' },
-  { id: 'doc-link-blog', url: 'https://your-blog.example.com/beeline', old: [], title: 'Beeline documentation (blog)' },
+  { id: 'doc-link-blog', url: 'https://rosariosai.substack.com', old: ['https://your-blog.example.com/beeline'], title: 'Beeline blog (The Daily Calf)' },
 ];
 export function ensureDocLinks(s: DataState, now: number): DataState {
   let next = s;
