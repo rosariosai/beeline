@@ -2,7 +2,7 @@
 source: claude
 date: 2026-11-01
 status: draft
-summary: How to install Beeline (v2.5.2) in Chrome, Brave and Firefox, how to update it, how to sync between browsers, and a tour of every feature.
+summary: How to install Beeline (v2.5.4) in Chrome, Brave and Firefox, how to update it, how to sync between browsers, and a tour of every feature.
 tags: [tilenest, bookmarks, install, chrome, brave, firefox]
 ---
 # Installing Beeline (formerly Tilenest Bookmarks)
@@ -46,7 +46,7 @@ Firefox only keeps unsigned extensions until you close it, unless you use one of
 **Permanent options**
 
 - **Firefox Developer Edition, Nightly or ESR:** open `about:config`, set `xpinstall.signatures.required` to `false`, then install the zip from `about:addons` > gear icon > **Install Add-on From File...** (rename the zip to `.xpi` if needed).
-- **Signed by Mozilla (works in normal Firefox):** create a free developer account at addons.mozilla.org, choose **Submit a New Add-on** > **On your own** (unlisted), upload `bookmarkonly-firefox.zip` and download the signed `.xpi`. Install it with **Install Add-on From File...**. The extension id in the manifest is `tilenest-bookmarks@example.local`; if Mozilla rejects it, change it to an id you own (for example `tilenest-bookmarks@yourname.example`) and rebuild. The source zip `release\bookmarkonly-source.zip` is for Mozilla's reviewers.
+- **Signed by Mozilla (works in normal Firefox):** create a free developer account at addons.mozilla.org, choose **Submit a New Add-on** > **On your own** (unlisted), upload `bookmarkonly-firefox.zip` and download the signed `.xpi`. Install it with **Install Add-on From File...**. The extension id in the manifest is `beeline-bookmarks@rosariosai.github.io`; if Mozilla rejects it, change it to an id you own (for example `tilenest-bookmarks@yourname.example`) and rebuild. The source zip `release\bookmarkonly-source.zip` is for Mozilla's reviewers.
 
 Firefox shows letter tiles instead of site icons (it has no local icon cache for extensions). Pick an icon image in the Edit dialog if you want one.
 

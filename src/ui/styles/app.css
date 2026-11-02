@@ -610,7 +610,7 @@ body { background: radial-gradient(1200px 600px at 70% -10%, color-mix(in srgb, 
 .view-note { margin: 10px 2px 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
 
 /* Beeline logo: bee on a light chip + wordmark (yellow "ee") */
-.bee-logo { width: 30px; height: 30px; flex: none; }
+.bee-logo { width: 34px; height: 34px; flex: none; border-radius: 8px; }
 .brand { display: inline-flex; align-items: center; gap: 9px; }
 .wordmark { font-weight: 900; font-size: 21px; letter-spacing: -.02em; line-height: 1; }
 .wordmark i { font-style: normal; color: #fac313; }

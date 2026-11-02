@@ -31,14 +31,13 @@ export function buildManifest(target, { test = false } = {}) {
   if (target === 'firefox') {
     manifest.content_security_policy = { extension_pages: "script-src 'self'; object-src 'self'" };
     manifest.browser_specific_settings = {
-      // 128 = first Firefox with optional_host_permissions (web-ext lint confirmed). Change the id before publishing.
+      // 128 = first Firefox with optional_host_permissions (web-ext lint confirmed). The id is permanent once published on addons.mozilla.org.
       gecko: {
-        id: 'tilenest-bookmarks@example.local',
+        id: 'beeline-bookmarks@rosariosai.github.io',
         strict_min_version: '128.0',
         // Declares to Mozilla that the add-on collects/transmits no user data.
         data_collection_permissions: { required: ['none'] },
       },
-      gecko_android: { strict_min_version: '128.0' },
     };
   }
   return manifest;
