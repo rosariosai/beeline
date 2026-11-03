@@ -38,7 +38,7 @@ const second = tiles.nth(1);
 assert(await second.evaluate((e) => e.classList.contains('tile--notitle')), 'flag off: the new tile has no title');
 const box = await second.locator('.tile-title').boundingBox();
 assert(box && box.width <= 2, 'the empty title takes no visible space (icon only)');
-assert(await second.locator('a').getAttribute('title').then((t) => t.includes('example.org')), 'hover text still shows the site');
+assert(await second.locator('a').getAttribute('title').then((t) => /example\.org/.test(t)), 'hover text still shows the site');
 assert(await page.getByRole('button', { name: 'Actions for example.org' }).count() === 1, 'screen readers still get the site name');
 await page.screenshot({ path: join(shots, 'notitle.png') });
 // editing keeps it empty

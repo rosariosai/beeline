@@ -56,7 +56,7 @@ assert((await titles()).join() === 'Alpha,Bravo,Charlie,Delta', 'drag Delta back
 // 3. plain click still opens the site
 await tile('Bravo').locator('a').click();
 await page.waitForTimeout(500);
-assert(navigations.some((u) => u.includes('b.com')), 'plain click still navigates');
+assert(navigations.some((u) => new URL(u).hostname === 'b.com'), 'plain click still navigates');
 await page.goto('chrome://newtab');
 await page.waitForSelector('.tile');
 

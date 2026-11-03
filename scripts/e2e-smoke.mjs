@@ -45,7 +45,7 @@ await add('github.com', 'GitHub', 'Code');
 await add('news.ycombinator.com', '', '');
 await add('https://www.wikipedia.org', 'Wikipedia', '');
 assert(await tiles().count() === 3, 'three bookmarks added');
-assert((await tiles().nth(1).innerText()).includes('news.ycombinator.com'), 'title defaults to hostname');
+assert((await tiles().nth(1).innerText()).match(/news\.ycombinator\.com/) !== null, 'title defaults to hostname');
 
 // group: create + rename
 await page.getByRole('button', { name: '+ New group' }).click();

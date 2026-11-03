@@ -155,3 +155,11 @@ describe('applyImport', () => {
     expect(Object.keys(out.tags)).toHaveLength(20);
   });
 });
+
+describe('tag stripping in imported titles', () => {
+  it('leaves no tag behind, even for nested input', () => {
+    const html = '<DL><DT><A HREF="https://a.com/">Hello <scr<b>ipt>alert(1)</scr</b>ipt> world</A></DL>';
+    const r = parseNetscapeHtml(html);
+    expect(r.items[0].title).not.toMatch(/<[a-z/]/i);
+  });
+});

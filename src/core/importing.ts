@@ -62,7 +62,12 @@ const decode = (s: string) =>
     if (e[0] === '#') { const n = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10); return Number.isFinite(n) ? String.fromCodePoint(n) : m; }
     return ENTITIES[e.toLowerCase()] ?? m;
   });
-const stripTags = (s: string) => decode(s.replace(/<[^>]*>/g, '')).trim();
+/** Remove HTML tags. Repeats until nothing changes, so nested input like "<scr<b>ipt>" cannot leave a tag behind. */
+const stripTags = (s: string) => {
+  let prev: string;
+  do { prev = s; s = s.replace(/<[^>]*>/g, ''); } while (s !== prev);
+  return decode(s).trim();
+};
 
 function attrsOf(raw: string): Record<string, string> {
   const out: Record<string, string> = {};
