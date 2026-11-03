@@ -6,7 +6,35 @@ A visual bookmark dashboard for your browser's New Tab page. Chrome, Brave and F
 >
 > **Desktop only for now.** Beeline is a desktop-browser extension (Chrome, Brave, Firefox on Windows, macOS and Linux). Phones and tablets are not supported in this release; the layout adapts to narrow windows and has touch gestures, but there is no mobile app or web version yet.
 
+Use it as a plain bookmark page, or as a quick personal start page or lab dashboard: group your instruments, data, papers and daily sites into tabs.
+
 The story of how Beeline is being built, one step at a time with AI, is on the blog [The Daily Calf](https://rosariosai.substack.com).
+
+## Screenshots
+
+Simple by default (Chrome, dark theme, sample data):
+
+![Simple mode: groups of tiles with a Preferred row on top](docs/screenshots/261-01-simple-by-default.png)
+
+Tabs split your groups into sets, for example for a lab or for free time:
+
+![Tabs: Lab, Reading and Free time](docs/screenshots/261-02-tabs.png)
+
+Choose which groups appear in which tab with a simple checkbox grid:
+
+![Edit tabs: checkbox grid](docs/screenshots/261-03-edit-tabs.png)
+
+Preferred size slider and the View menu:
+
+![View menu with the Preferred size slider](docs/screenshots/261-04-preferred-size.png)
+
+Switch between Simple and Advanced mode at any time; nothing is lost:
+
+![View menu with the Simple and Advanced mode switch](docs/screenshots/261-05-simple-advanced-mode.png)
+
+Instant search:
+
+![Instant search](docs/screenshots/261-06-search.png)
 
 ## What it does
 
