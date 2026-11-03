@@ -22,10 +22,13 @@ export const collisionDetection: CollisionDetection = (args) => {
   const containers = args.droppableContainers.filter((c) => {
     const t = c.data.current?.type;
     if (kind === 'launch') return t === 'launch';
-    return kind === 'group' ? t === 'group' : t === 'bookmark' || t === 'side' || t === 'section';
+    return kind === 'group' ? t === 'group' || t === 'tab' : t === 'bookmark' || t === 'side' || t === 'section';
   });
   const scoped = { ...args, droppableContainers: containers };
   const hits = pointerWithin(scoped);
+  // A group dropped on a tab bar button is copied into that tab (right-button drag in the sidebar moves instead).
+  const tabHits = kind === 'group' ? hits.filter((h) => containers.find((c) => c.id === h.id)?.data.current?.type === 'tab') : [];
+  if (tabHits.length) return tabHits;
   const specific = hits.filter((h) => containers.find((c) => c.id === h.id)?.data.current?.type !== 'section');
   if (specific.length) return specific;
   if (hits.length) return hits;

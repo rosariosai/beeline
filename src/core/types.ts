@@ -64,7 +64,16 @@ export interface DataState {
   tags: Record<string, Tag>;
 }
 
+/** A tab: a named set of groups shown together (2 to 5 tabs). A group can be in several tabs. */
+export interface Tab {
+  id: string;
+  name: string;
+  groupIds: string[];
+}
+
 export interface Settings {
+  /** 'simple' = the basics only; 'advanced' = every feature. Advanced settings are kept (not deleted) while in Simple. */
+  mode: 'simple' | 'advanced';
   theme: 'system' | 'light' | 'dark';
   tileSize: 's' | 'm' | 'l';
   /** 'tiles' = big icon cards, 'compact' = one-line rows, 'icons' = icons only (name in the tooltip). */
@@ -95,12 +104,21 @@ export interface Settings {
   showGroupHeaders: boolean;
   /** Show a number on every bookmark (TV-channel style); typing the number in the search box and pressing Enter opens it. */
   showNumbers: boolean;
+  /** Tabs (supergroups). Empty = no tab bar. Synced with the "View settings" layer. */
+  tabs: Tab[];
+  /** Keep an "All" tab first in the tab bar. Without it, groups in no tab go to an automatic "Other" tab. */
+  showAllTab: boolean;
+  /** Size of the Preferred icons as a multiple of a normal bookmark icon: 1 = same size, up to 4. */
+  preferredScale: number;
+  /** The tab you were on (this browser only). */
+  activeTabId: string | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: 'dark', tileSize: 'm', layout: 'tiles', showHidden: false, defaultTitle: true, sidebar: true, groupsPerRow: 'one',
+  mode: 'simple', theme: 'dark', tileSize: 'm', layout: 'tiles', showHidden: false, defaultTitle: true, sidebar: true, groupsPerRow: 'one',
   focusSearch: true, openIn: 'same', startView: 'all', lastGroupId: null,
   showLaunchpad: true, showOften: false, customIcons: [], showTags: true, showGroupHeaders: true, showNumbers: false,
+  tabs: [], showAllTab: true, preferredScale: 1.75, activeTabId: null,
 };
 export const SCHEMA_VERSION = 1;
 

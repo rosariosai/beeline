@@ -679,3 +679,47 @@ body { background: radial-gradient(1200px 600px at 70% -10%, color-mix(in srgb, 
   .tile--ghost > * { visibility: hidden; }
   .tile--overlay { transform: scale(1.04); box-shadow: 0 14px 28px rgba(0,0,0,.45), 0 10px 10px rgba(0,0,0,.35); z-index: 50; }
 }
+
+/* ---- v2.6.0: tabs, Preferred size slider, group total ---- */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.link { background: none; border: 0; padding: 0; color: var(--accent-ink, var(--accent)); cursor: pointer; font-size: 11px; text-decoration: underline; }
+.side-total { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 11px; letter-spacing: 0; font-weight: 600; text-transform: none; }
+
+.tabbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 18px; border-bottom: 1px solid var(--hair, var(--border)); }
+.tabbar-list { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.tab { display: inline-flex; align-items: center; gap: 8px; max-width: 220px; padding: 10px 16px 9px; border: 0; border-bottom: 3px solid transparent; border-radius: 12px 12px 0 0;
+  background: none; color: var(--muted); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: -1px; }
+.tab:hover { background: var(--surface-2); color: var(--text); }
+.tab--on { color: var(--text); border-bottom-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.tab .count { font-size: 12px; }
+.tab-edit { flex: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; padding: 8px 10px; border-radius: 10px; }
+.tab-edit:hover { background: var(--surface-2); color: var(--text); }
+
+.dialog--tabs { width: min(760px, 96vw); }
+.tabs-names { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tabs-name { display: flex; gap: 4px; align-items: center; }
+.tabs-name input { width: 150px; }
+.tabs-grid-wrap { max-height: 46vh; overflow: auto; border: 1px solid var(--hair, var(--border)); border-radius: 12px; }
+.tabs-grid { border-collapse: collapse; width: 100%; font-size: 14px; }
+.tabs-grid th, .tabs-grid td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--hair, var(--border)); }
+.tabs-grid thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); max-width: 120px; }
+.tabs-grid th:first-child { text-align: left; font-weight: 500; max-width: 260px; }
+.tabs-grid tbody th .truncate { display: block; }
+.tabs-grid .tabs-colbtns { display: flex; gap: 8px; justify-content: center; }
+.tabs-grid input[type='checkbox'] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+.tabs-row--none { background: color-mix(in srgb, #f59e0b 12%, transparent); }
+
+.view-slider { display: flex; align-items: center; gap: 12px; }
+.view-slider input[type='range'] { flex: 1; accent-color: var(--accent); }
+.view-slider-val { min-width: 46px; text-align: right; font-weight: 700; font-size: 14px; }
+.view-slider-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.view-tabs-btn { width: 100%; justify-content: flex-start; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Preferred icons = a normal bookmark icon x the chosen scale (View menu > Preferred size). */
+.launchpad { --base-icon: var(--icon); }
+:root[data-tile] .launchpad .launch-link { --icon: calc(var(--base-icon) * var(--pref-scale, 1.75)); }
+:root[data-tile] .launchpad .launch-item { width: max(92px, calc(var(--icon) * var(--pref-scale, 1.75) + 48px)); }
+@media (max-width: 720px) { .tab { padding: 12px 12px 10px; } .tab-edit { min-height: 44px; } .tabbar { flex-wrap: wrap; } }
+.tab--drop { background: color-mix(in srgb, var(--accent) 28%, transparent); box-shadow: inset 0 0 0 2px var(--accent); color: var(--text); }
+.tab-ghost { position: fixed; z-index: 200; pointer-events: none; }
+body.tab-dragging, body.tab-dragging * { cursor: grabbing !important; user-select: none; }

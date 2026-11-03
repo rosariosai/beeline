@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { BrowserId, DataState, Settings } from '../core/types';
+import { effectiveSettings } from '../core/mode';
 import { diffState, isEmptyDiff, recordOpen, revertChange, withoutForeignExtLinks } from '../core/ops';
 import { applyDiff, saveSettings, type Db } from '../data/db';
 
@@ -13,7 +14,11 @@ interface Store {
   /** Everything stored, including links that are not shown in this browser (backups, sync). */
   allData: DataState;
   browser: BrowserId;
+  /** What the screens use: in Simple mode the advanced options are switched off here (but kept in rawSettings). */
   settings: Settings;
+  /** The stored settings (use for backups and sync). */
+  rawSettings: Settings;
+  advanced: boolean;
   view: View;
   /** Selected tag ids (AND filter). */
   tagFilter: string[];
@@ -50,7 +55,8 @@ export function StoreProvider(props: { db: Db; browser: BrowserId; initialData: 
   const [allData, setData] = useState(props.initialData);
   // What the screens show: the extensions links of other browsers are left out. Backups, sync and edits use allData.
   const data = useMemo(() => withoutForeignExtLinks(allData, props.browser), [allData, props.browser]);
-  const [settings, setSettings] = useState(props.initialSettings);
+  const [rawSettings, setSettings] = useState(props.initialSettings);
+  const settings = useMemo(() => effectiveSettings(rawSettings), [rawSettings]);
   const [view, setViewState] = useState<View>(() => {
     const { startView, lastGroupId } = props.initialSettings;
     return startView === 'last' && lastGroupId && props.initialData.groups[lastGroupId] ? { kind: 'group', id: lastGroupId } : { kind: 'all' };
@@ -106,7 +112,7 @@ export function StoreProvider(props: { db: Db; browser: BrowserId; initialData: 
     [persist, showToast],
   );
 
-  const settingsRef = useRef(settings);
+  const settingsRef = useRef(rawSettings);
   const updateSettings = useCallback(
     (patch: Partial<Settings>) => {
       const next = { ...settingsRef.current, ...patch };
@@ -150,6 +156,7 @@ export function StoreProvider(props: { db: Db; browser: BrowserId; initialData: 
     root.dataset.layout = settings.layout;
     root.dataset.headers = settings.showGroupHeaders ? 'show' : 'hide';
     root.dataset.tags = settings.showTags ? 'show' : 'hide';
+    root.style.setProperty('--pref-scale', String(settings.preferredScale));
     root.dataset.autoTitle = settings.defaultTitle ? 'show' : 'hide';
   }, [settings]);
 
@@ -168,8 +175,8 @@ export function StoreProvider(props: { db: Db; browser: BrowserId; initialData: 
   }, [toast]);
 
   const value = useMemo<Store>(
-    () => ({ db, data, allData, browser: props.browser, settings, view, tagFilter, query, setQuery, toast, setView, toggleTag, clearTags, commit, updateSettings, dismissToast, undoLast, trackOpen, getData: () => dataRef.current, notify: showToast }),
-    [db, data, allData, props.browser, settings, view, tagFilter, query, toast, setView, toggleTag, clearTags, commit, updateSettings, dismissToast, undoLast, trackOpen, showToast],
+    () => ({ db, data, allData, browser: props.browser, settings, rawSettings, advanced: rawSettings.mode === 'advanced', view, tagFilter, query, setQuery, toast, setView, toggleTag, clearTags, commit, updateSettings, dismissToast, undoLast, trackOpen, getData: () => dataRef.current, notify: showToast }),
+    [db, data, allData, props.browser, settings, rawSettings, view, tagFilter, query, toast, setView, toggleTag, clearTags, commit, updateSettings, dismissToast, undoLast, trackOpen, showToast],
   );
   return <Ctx.Provider value={value}>{props.children}</Ctx.Provider>;
 }

@@ -129,7 +129,7 @@ const LAYER_FIELDS = {
 const localOnly = (scope: SyncScope, key: 'bookmarks' | 'groups'): string[] =>
   (['order', 'look', 'hidden'] as const).filter((l) => !scope[l]).flatMap((l) => [...LAYER_FIELDS[l][key]]);
 
-export const VIEW_KEYS = ['theme', 'tileSize', 'layout', 'groupsPerRow', 'showLaunchpad', 'showOften', 'defaultTitle', 'customIcons', 'showTags', 'showGroupHeaders', 'showNumbers'] as const;
+export const VIEW_KEYS = ['theme', 'tileSize', 'layout', 'groupsPerRow', 'showLaunchpad', 'showOften', 'defaultTitle', 'customIcons', 'showTags', 'showGroupHeaders', 'showNumbers', 'tabs', 'showAllTab', 'preferredScale'] as const;
 export type ViewSettings = Pick<Settings, (typeof VIEW_KEYS)[number]>;
 export const viewOf = (s: Settings): ViewSettings => Object.fromEntries(VIEW_KEYS.map((k) => [k, s[k]])) as unknown as ViewSettings;
 

@@ -91,7 +91,7 @@ Bookmarks, groups and tags (names, web addresses, titles, tags, which group a bo
 | Order and Preferred | order of groups and tiles, ★ Preferred stars and their order, promoted groups | on |
 | Group look | group colour, icon, collapsed or not | on |
 | Hidden items | hidden bookmarks and groups (and "hide until" dates), which browsers show a group | off |
-| View settings | layout, size, density, theme, Launchpad options, "show site name", your own group icons | off |
+| View settings | layout, size, density, theme, Launchpad options, Preferred size, tabs, "show site name", your own group icons | off |
 
 Three buttons set them all at once: **Content only** (all layers off), **Recommended** (order and look on) and **Everything**. A layer that is off stays exactly as it is in this browser, and the sync file keeps the values the other browsers wrote, so one browser's choice never erases another's. Hiding something in Brave for a week therefore does not hide it in Chrome unless both have "Hidden items" on. Turning a layer on takes the file's values for it on the next sync (the file wins for that layer the first time). The choice is saved per browser and is not part of the file or of backups.
 
@@ -150,3 +150,14 @@ Layout (Big tiles, Compact list, Icons only), size (Small, Medium, Large), group
 
 **Restore.** If a built-in link is missing (deleted, or the browser profile was set up before it existed), Settings > Bookmarks > **Restore built-in links** recreates it. It never changes your other bookmarks, unlike importing a backup, which replaces or merges your whole collection.
 
+
+
+## Tabs and Preferred size (2.6.0)
+
+- **Tabs**: open the View menu > **Tabs > Add tabs** (later *Edit tabs*), or the **✎ Edit tabs** button at the right of the tab bar. Add 2 to 5 tabs, name them (for example *Work*, *Free time*, *Media*), and tick in the grid which groups belong to which tab. A group can be in several tabs. Untick *Keep an All tab first* if you want only your own tabs; groups that are in no tab then appear under an automatic **Other** tab. To move one group quickly, use its menu (⋯ in the sidebar, or 🙈 Hide… button) > **Show in tab…**. **Drag and drop**: drag a group from the side panel onto a tab with the left button to copy it into that tab, or with the right button to move it (it leaves the tab you are on). A group created while a tab is open is added to that tab. The Preferred bar stays above every tab; search always looks in all tabs. Removing every tab brings back the plain dashboard.
+- **Preferred size**: View menu > **Preferred size** slider. 1× = the same size as your other bookmarks, up to 4×. The size follows the layout and size you chose (Tiles, List, Icons; Small, Medium, Large).
+- The **Groups** heading in the sidebar shows how many groups you have (and "2 of 8" when a tab shows only some).
+
+## Simple and Advanced mode (2.6.0)
+
+A new install starts in **Simple**: add bookmarks, put them in groups (colour and icon), drag to reorder, mark favourites with ★ Preferred, search, pick a Quick look (Classic, Compact, Icons), light or dark theme, import and export. Everything else is **Advanced**: tabs, Preferred size, numbers, tags, hiding (and hide-until), group headers, the No boxes view, per-browser groups, promote group, Often used, custom group icons, sync. Switch any time in **View menu > Mode** or **Settings > Mode**. Going back to Simple only hides the extras and shows the plain dashboard; your tabs, tags and settings are kept and return when you switch to Advanced. If you already used Beeline before modes existed, it opens in Advanced.

@@ -8,7 +8,7 @@ const COLOR_NAMES = ['Blue', 'Purple', 'Pink', 'Red', 'Orange', 'Yellow', 'Green
 
 /** Small sheet to pick a group's colour (8 dots) and an optional emoji. */
 export function GroupStyleDialog(props: { groupId: string; onClose(): void }) {
-  const { allData, commit, browser, settings, updateSettings } = useStore();
+  const { allData, commit, browser, settings, updateSettings, advanced } = useStore();
   const g = allData.groups[props.groupId];
   const ref = useRef<HTMLDialogElement>(null);
   const [color, setColor] = useState<string | null>(g?.color ?? null);
@@ -26,7 +26,7 @@ export function GroupStyleDialog(props: { groupId: string; onClose(): void }) {
   return (
     <dialog ref={ref} className="dialog dialog--small" onClose={props.onClose} aria-labelledby="gs-title">
       <form onSubmit={(e) => { e.preventDefault(); save(); }}>
-        <h2 id="gs-title">Group options: {g.name}</h2>
+        <h2 id="gs-title">{advanced ? 'Group options' : 'Colour and icon'}: {g.name}</h2>
         <div className="field">
           <span className="field-label">Colour</span>
           <div className="swatches" role="radiogroup" aria-label="Group colour">
@@ -46,7 +46,7 @@ export function GroupStyleDialog(props: { groupId: string; onClose(): void }) {
                 onClick={() => setEmoji(emoji === e ? '' : e)}>{e}</button>
             ))}
           </div>
-          {settings.customIcons.length > 0 && (
+          {advanced && settings.customIcons.length > 0 && (
             <div className="emoji-row" aria-label="My icons">
               {settings.customIcons.map((e) => (
                 <span key={e} className="emoji-custom">
@@ -58,20 +58,20 @@ export function GroupStyleDialog(props: { groupId: string; onClose(): void }) {
               ))}
             </div>
           )}
-          <div className="emoji-add">
+          {advanced && <div className="emoji-add">
             <input value={emoji} onChange={(e) => setEmoji(e.target.value)} maxLength={16} placeholder="Type any emoji or 1–4 letters" aria-label="Icon" />
             <button type="button" className="btn" disabled={!emoji.trim() || settings.customIcons.includes([...emoji.trim()].slice(0, 4).join('')) || EMOJI.includes(emoji.trim())}
               title="Keep this icon in the picker for every group"
               onClick={() => { const v = [...emoji.trim()].slice(0, 4).join(''); updateSettings({ customIcons: [...settings.customIcons, v].slice(0, 60) }); setEmoji(v); }}>
               + Add to my icons
             </button>
-          </div>
+          </div>}
         </div>
-        <label className="check field">
+        {advanced && <label className="check field">
           <input type="checkbox" checked={promoted} onChange={(e) => setPromoted(e.target.checked)} />
           Promote to Preferred: show all its bookmarks in the Preferred bar and hide the group itself
-        </label>
-        <fieldset className="field browsers">
+        </label>}
+        {advanced && <fieldset className="field browsers">
           <legend className="field-label">Show this group in</legend>
           <div className="browser-row">
             {BROWSERS.map((b) => (
@@ -83,7 +83,7 @@ export function GroupStyleDialog(props: { groupId: string; onClose(): void }) {
             ))}
           </div>
           <p className="hint">Untick a browser to hide this group there: it then counts as a hidden group (visible, dimmed, under 👁 Hidden). It stays in your backups and keeps syncing.{!shown.includes(browser) ? ' It will be hidden in this browser when you save.' : ''}</p>
-        </fieldset>
+        </fieldset>}
         <div className="dialog-actions">
           <button type="button" className="btn" onClick={() => ref.current?.close()}>Cancel</button>
           <button type="submit" className="btn btn--primary">Save</button>

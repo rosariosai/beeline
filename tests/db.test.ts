@@ -16,7 +16,7 @@ describe('IndexedDB repository', () => {
     const { state, settings } = await loadAll(db);
     expect(Object.keys(state.bookmarks)).toEqual(['a']);
     expect(state.groups.g.name).toBe('Work');
-    expect(settings).toEqual(DEFAULT_SETTINGS);
+    expect(settings).toEqual({ ...DEFAULT_SETTINGS, mode: 'advanced' }); // existing data from before modes = Advanced
   });
 
   it('persists settings', async () => {

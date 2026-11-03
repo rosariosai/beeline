@@ -29,7 +29,9 @@ function Radios<T extends string>(props: {
 
 export function SettingsDialog(props: { onClose(): void; onOpenData(): void; sync: SyncApi }) {
   const { status: st } = props.sync;
-  const { settings, updateSettings, browser, db, commit, getData, notify } = useStore();
+  const { settings, rawSettings, updateSettings, browser, db, commit, getData, notify, advanced } = useStore();
+  let cardNo = 0;
+  const num = () => ++cardNo;
   const [iconMsg, setIconMsg] = useState<string | null>(null);
   const [iconBusy, setIconBusy] = useState(false);
   const ref = useRef<HTMLDialogElement>(null);
@@ -41,8 +43,17 @@ export function SettingsDialog(props: { onClose(): void; onOpenData(): void; syn
       <div className="dialog-body">
         <h2 id="settings-title">Settings</h2>
 
+        <section className="data-section settings-card" style={{ '--sc': '#06b6d4' } as React.CSSProperties}>
+          <h3><span className="sc-icon" aria-hidden>🎚</span><span className="sc-num">{num()}</span>Mode</h3>
+          <Radios legend="How much of Beeline do you want to see?" name="mode" value={rawSettings.mode} onChange={(v) => set('mode', v)}
+            options={[{ value: 'simple', label: 'Simple: bookmarks, groups, search, Preferred' }, { value: 'advanced', label: 'Advanced: also tabs, tags, numbers, hiding, sync, sizes…' }]} />
+          <p className="hint">Switching to Simple only hides the extra features; nothing is deleted, and Advanced brings everything back exactly as you left it.</p>
+        </section>
+
+
+        {advanced && (
         <section className="data-section settings-card" style={{ '--sc': '#14b8a6' } as React.CSSProperties}>
-          <h3><span className="sc-icon" aria-hidden>🧭</span><span className="sc-num">1</span>This browser</h3>
+          <h3><span className="sc-icon" aria-hidden>🧭</span><span className="sc-num">{num()}</span>This browser</h3>
           <p className="hint">Beeline thinks this is <strong>{browser === 'brave' ? 'Brave' : browser === 'firefox' ? 'Firefox' : 'Chrome'}</strong>. It uses this to know which “Top …” group is yours. Brave can look like Chrome to extensions, so if it is wrong, choose the right one (the page reloads).</p>
           <div className="data-actions">
             {(['chrome', 'brave', 'firefox'] as const).map((b) => (
@@ -51,9 +62,12 @@ export function SettingsDialog(props: { onClose(): void; onOpenData(): void; syn
             ))}
           </div>
         </section>
+        )}
 
+
+        {advanced && (
         <section className="data-section settings-card" style={{ '--sc': '#3b82f6' } as React.CSSProperties}>
-          <h3><span className="sc-icon" aria-hidden>⟳</span><span className="sc-num">2</span>Sync between browsers</h3>
+          <h3><span className="sc-icon" aria-hidden>⟳</span><span className="sc-num">{num()}</span>Sync between browsers</h3>
           <p className="hint">Keep Chrome and Brave in step through <strong>one file</strong> in a folder that your cloud drive already syncs (Google Drive, OneDrive, Dropbox, Syncthing…). Beeline only reads and writes that file; nothing goes anywhere else.</p>
           {canKeepFile() ? (
             st.linked ? (
@@ -100,23 +114,26 @@ export function SettingsDialog(props: { onClose(): void; onOpenData(): void; syn
           {st.message && <p className="summary" role="status">{st.message}</p>}
           {st.error && <p className="field-error" role="alert">{st.error}</p>}
         </section>
+        )}
 
         <section className="data-section settings-card" style={{ '--sc': '#f59e0b' } as React.CSSProperties}>
-          <h3><span className="sc-icon" aria-hidden>★</span><span className="sc-num">3</span>Preferred</h3>
+          <h3><span className="sc-icon" aria-hidden>★</span><span className="sc-num">{num()}</span>Preferred</h3>
           <label className="check">
             <input type="checkbox" checked={settings.showLaunchpad} onChange={(e) => set('showLaunchpad', e.target.checked)} />
             Show the Preferred Launchpad
           </label>
-          <label className="check">
+          {advanced && <label className="check">
             <input type="checkbox" checked={settings.showOften} onChange={(e) => set('showOften', e.target.checked)} />
             Show an “Often used” row
-          </label>
-          <p className="hint">Set a bookmark as preferred in its Edit dialog. Preferred bookmarks are the same in every browser.</p>
-          <p className="hint">Each browser has its own group (Top Chrome, Top Brave, Top Firefox), shown normally only in that browser; the others appear under 👁 Hidden. Promote a group to Preferred from its menu.</p>
+          </label>}
+          <p className="hint">Set a bookmark as preferred in its Edit dialog or with “Set as preferred” in its menu.{advanced ? ' Preferred bookmarks are the same in every browser.' : ''}</p>
+          {advanced && <p className="hint">Each browser has its own group (Top Chrome, Top Brave, Top Firefox), shown normally only in that browser; the others appear under 👁 Hidden. Promote a group to Preferred from its menu.</p>}
         </section>
 
+
+        {advanced && (
         <section className="data-section settings-card" style={{ '--sc': '#a855f7' } as React.CSSProperties}>
-          <h3><span className="sc-icon" aria-hidden>🔖</span><span className="sc-num">4</span>Bookmarks</h3>
+          <h3><span className="sc-icon" aria-hidden>🔖</span><span className="sc-num">{num()}</span>Bookmarks</h3>
           <label className="check">
             <input type="checkbox" checked={settings.showTags} onChange={(e) => set('showTags', e.target.checked)} />
             Show tags on big tiles (List and Icons never show them)
@@ -137,9 +154,10 @@ export function SettingsDialog(props: { onClose(): void; onOpenData(): void; syn
           </div>
           <p className="hint">Brings back the built-in links if they are missing: this browser’s extensions page link (also unhidden) and the two Beeline documentation links. It does not touch any other bookmark (unlike importing a backup, which replaces or merges your whole collection).</p>
         </section>
+        )}
 
         <section className="data-section settings-card" style={{ '--sc': '#22c55e' } as React.CSSProperties}>
-          <h3><span className="sc-icon" aria-hidden>➕</span><span className="sc-num">5</span>New tab behaviour</h3>
+          <h3><span className="sc-icon" aria-hidden>➕</span><span className="sc-num">{num()}</span>New tab behaviour</h3>
           <label className="check">
             <input type="checkbox" checked={settings.focusSearch} onChange={(e) => set('focusSearch', e.target.checked)} />
             Put the cursor in the search box when a new tab opens
@@ -151,7 +169,7 @@ export function SettingsDialog(props: { onClose(): void; onOpenData(): void; syn
         </section>
 
         <section className="data-section settings-card" style={{ '--sc': '#94a3b8' } as React.CSSProperties}>
-          <h3><span className="sc-icon" aria-hidden>💾</span><span className="sc-num">6</span>Your data</h3>
+          <h3><span className="sc-icon" aria-hidden>💾</span><span className="sc-num">{num()}</span>Your data</h3>
           <p className="hint">Your bookmarks are stored in this browser: no accounts, no tracking, nothing is sent anywhere.{canKeepFile() ? ' The only thing that leaves is the sync file you choose above.' : ''}</p>
           <div className="data-actions">
             <button className="btn" onClick={() => { ref.current?.close(); props.onOpenData(); }}>Import / Export…</button>
@@ -172,7 +190,7 @@ export function SettingsDialog(props: { onClose(): void; onOpenData(): void; syn
         </section>
 
         <section className="data-section settings-card" style={{ '--sc': '#ec4899' } as React.CSSProperties}>
-          <h3><span className="sc-icon" aria-hidden>🎨</span><span className="sc-num">7</span>Display</h3>
+          <h3><span className="sc-icon" aria-hidden>🎨</span><span className="sc-num">{num()}</span>Display</h3>
           <Radios legend="Theme" name="theme" value={settings.theme} onChange={(v) => set('theme', v)}
             options={[{ value: 'system', label: 'Match my system' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} />
           <p className="hint">Layout (tiles, list, icons), size, groups per row and tags on tiles are in the <strong>◫ View</strong> menu in the top bar; the side panel opens with ☰.</p>

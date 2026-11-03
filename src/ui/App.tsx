@@ -29,12 +29,17 @@ import { ContextMenu } from './components/ContextMenu';
 import { SearchBox } from './components/SearchBox';
 import { DataDialog } from './components/DataDialog';
 import { SettingsDialog } from './components/SettingsDialog';
+import { TabBar } from './components/TabBar';
+import { TabsDialog } from './components/TabsDialog';
+import { useTabScope } from './useTabScope';
+import { tabMenuItems } from './tabMenu';
+import { moveGroupToTab } from '../core/tabs';
 import { SearchResults, resultId } from './components/SearchResults';
 
 type Dialog = { editing: Bookmark | null } | null;
 
 export function App() {
-  const { data, settings, view, tagFilter, toggleTag, clearTags, query, setQuery, toast, commit, dismissToast, updateSettings, notify, trackOpen, browser } = useStore();
+  const { data, settings, view, tagFilter, toggleTag, clearTags, query, setQuery, toast, commit, dismissToast, updateSettings, notify, trackOpen, browser, advanced } = useStore();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; bookmark: Bookmark } | null>(null);
   const [groupMenu, setGroupMenu] = useState<{ x: number; y: number; groupId: string } | null>(null);
@@ -43,6 +48,8 @@ export function App() {
   const [styleGroupId, setStyleGroupId] = useState<string | null>(null);
   const [dataOpen, setDataOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tabsOpen, setTabsOpen] = useState(false);
+  const tabScope = useTabScope();
   const settingsBtn = useRef<HTMLButtonElement>(null);
   const newTab = settings.openIn === 'new';
   const [dragging, setDragging] = useState<{ type: 'bookmark' | 'group' | 'launch'; id: string } | null>(null);
@@ -98,6 +105,14 @@ export function App() {
     setDragging({ type: e.active.data.current?.type === 'group' ? 'group' : e.active.data.current?.type === 'launch' ? 'launch' : 'bookmark', id: String(e.active.id) });
   const onDragEnd = (e: DragEndEvent) => {
     setDragging(null);
+    // Left-button drop of a group on a tab: copy it into that tab (it stays in the tab it is in).
+    const ov = e.over?.data.current as { type?: string; tabId?: string } | undefined;
+    if (ov?.type === 'tab' && ov.tabId && e.active.data.current?.type === 'group') {
+      const gid = String(e.active.id).replace(/^(group:|gsec:)/, '');
+      const next = moveGroupToTab(settings.tabs, gid, ov.tabId);
+      if (next !== settings.tabs) { updateSettings({ tabs: next }); notify(`“${data.groups[gid]?.name ?? 'Group'}” is now also in “${settings.tabs.find((t) => t.id === ov.tabId)?.name}”.`); }
+      return;
+    }
     const fn = dropToUpdate(e, Date.now());
     if (fn) commit(fn);
   };
@@ -109,22 +124,22 @@ export function App() {
   const searching = query.trim().length > 0;
   // TV-style numbers: bookmark n in the order you see them (Preferred bar first). Typing a number finds that bookmark.
   const numbering = useMemo(
-    () => numberBookmarks(data, { launchpadFirst: settings.showLaunchpad, showHidden: settings.showHidden, now: Date.now() }),
-    [data, settings.showLaunchpad, settings.showHidden],
+    () => numberBookmarks(data, { launchpadFirst: settings.showLaunchpad, showHidden: settings.showHidden, now: Date.now(), include: (gid) => (view.kind === 'group' && gid === view.id) || tabScope.includes(gid) }),
+    [data, settings.showLaunchpad, settings.showHidden, tabScope, view],
   );
   const results = useMemo(
     () => {
       if (!searching) return [];
       const found = search(index, query).map((h) => data.bookmarks[h.id]).filter((b) => b && matchesTags(b, tagFilter) && (settings.showHidden || !isBookmarkHidden(data, b, Date.now(), true)));
       const q = query.trim();
-      if (/^\d{1,5}$/.test(q)) {
+      if (advanced && /^\d{1,5}$/.test(q)) {
         const n = Number(q);
         const hit = [...numbering].find(([, v]) => v === n);
         if (hit && data.bookmarks[hit[0]]) return [data.bookmarks[hit[0]], ...found.filter((b) => b.id !== hit[0])];
       }
       return found;
     },
-    [searching, index, query, data, tagFilter, settings.showHidden, numbering],
+    [searching, index, query, data, tagFilter, settings.showHidden, numbering, advanced],
   );
   useEffect(() => setSel(0), [query]);
   const selected = Math.min(sel, Math.max(0, results.length - 1));
@@ -178,8 +193,8 @@ export function App() {
     : view.kind === 'group'
       ? (viewGroupHidden ? [] : [{ id: view.id as string | null, name: data.groups[view.id]?.name ?? '', items: pick(view.id) }])
       : [
-          ...groups.filter((g) => showHidden || !isHiddenFlag(g, now)).map((g) => ({ id: g.id as string | null, name: g.name, items: pick(g.id) })),
-          { id: null as string | null, name: 'Ungrouped', items: pick(null) },
+          ...groups.filter((g) => (showHidden || !isHiddenFlag(g, now)) && tabScope.includes(g.id)).map((g) => ({ id: g.id as string | null, name: g.name, items: pick(g.id) })),
+          { id: null as string | null, name: 'Ungrouped', items: tabScope.includes(null) ? pick(null) : [] },
         ].filter((s) => s.items.length > 0);
   // In the flat view a bookmark already shown in the Preferred bar is not repeated below it.
   const rawItems = settings.groupsPerRow === 'raw'
@@ -229,8 +244,8 @@ export function App() {
               <path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4.5L5 21V4.5a1 1 0 0 1 1-1z" /><path d="M12 7.2l1.2 2.4 2.7.4-1.95 1.9.45 2.7L12 13.3l-2.4 1.3.45-2.7L8.1 10l2.7-.4z" fill="#fde047" stroke="#fde047" strokeWidth="1" />
             </svg>
           </button>
-          <ViewMenu />
-          {(hiddenN > 0 || showHidden) && (
+          <ViewMenu onEditTabs={() => setTabsOpen(true)} />
+          {advanced && (hiddenN > 0 || showHidden) && (
             <button className={`btn btn--hidden${showHidden ? ' btn--hidden-on' : ''}`} aria-pressed={showHidden} aria-label={`Hidden items: ${hiddenN}, ${showHidden ? 'shown' : 'not shown'}`}
               title={showHidden ? `Hidden items are shown (${hiddenN}). Click to hide them again.` : `Hidden items are not shown (${hiddenN}). Click to show them.`}
               onClick={() => updateSettings({ showHidden: !showHidden })}>
@@ -245,7 +260,7 @@ export function App() {
               <span className="hidden-count">{hiddenN}</span>
             </button>
           )}
-          {sync.status.linked && (
+          {advanced && sync.status.linked && (
             <button className={`btn btn--sync${sync.status.error ? ' btn--warn' : ''}`} disabled={sync.status.busy} onClick={() => void sync.syncNow()}
               title={sync.status.error ?? sync.status.message ?? (sync.status.lastSyncAt ? `Last synced ${new Date(sync.status.lastSyncAt).toLocaleString()}. Click to sync now.` : 'Sync with your sync file')}>
               {sync.status.busy ? '⟳ Syncing…' : sync.status.error ? '⚠ Sync' : !sync.status.allowed ? '⟳ Sync (allow)'
@@ -265,7 +280,7 @@ export function App() {
       {narrow && drawerOpen && (
         <div className="drawer-foot">
           <button type="button" className="btn" onClick={() => { setDrawerOpen(false); setDataOpen(true); }}>Import / Export</button>
-          {sync.status.linked && (
+          {advanced && sync.status.linked && (
             <button type="button" className={`btn${sync.status.error ? ' btn--warn' : ''}`} disabled={sync.status.busy} onClick={() => void sync.syncNow()}>
               {sync.status.busy ? '⟳ Syncing…' : sync.status.error ? '⚠ Sync' : '⟳ Sync now'}
             </button>
@@ -310,6 +325,7 @@ export function App() {
               <Launchpad numbers={settings.showNumbers ? numbering : undefined} preferred={preferredList} often={oftenList} newTab={newTab} isHidden={(b) => isBookmarkHidden(data, b, now, true)}
                 onOpen={trackOpen} onMenu={openMenu} />
             )}
+            {tabScope.views.length > 0 && view.kind !== 'preferred' && total > 0 && <TabBar onEdit={() => setTabsOpen(true)} />}
             {view.kind === 'preferred' && (
               <section className="section section--preferred" aria-label="Preferred">
                 <h2 className="section-title"><span className="launch-star" aria-hidden>★</span> Preferred <span className="count">{preferredList.length}</span></h2>
@@ -350,8 +366,8 @@ export function App() {
                 onToggleCollapse={sec.id && view.kind === 'all' && !filtering ? () => commit((s) => setGroupCollapsed(s, sec.id as string)) : undefined}
                 color={sec.id ? data.groups[sec.id]?.color : undefined} emoji={sec.id ? data.groups[sec.id]?.emoji : undefined}
                 data={data} tagFilter={tagFilter} onMenu={openMenu} onTag={toggleTag} newTab={newTab} onOpen={trackOpen}
-                onGroupMenu={sec.id ? (p) => setGroupMenu({ ...p, groupId: sec.id as string }) : undefined}
-                onTagGroup={sec.id ? () => tagGroup(sec.id as string) : undefined}
+                onGroupMenu={sec.id && advanced ? (p) => setGroupMenu({ ...p, groupId: sec.id as string }) : undefined}
+                onTagGroup={sec.id && advanced ? () => tagGroup(sec.id as string) : undefined}
                 compact={settings.layout === 'compact'} now={now}
                 groupHidden={sec.id !== null && !!data.groups[sec.id] && isHiddenFlag(data.groups[sec.id], now)} groupPromoted={sec.id !== null && !!data.groups[sec.id]?.promoted} />
             ))}
@@ -365,6 +381,7 @@ export function App() {
           <ContextMenu x={groupMenu.x} y={groupMenu.y} onClose={() => setGroupMenu(null)}
             items={[{ label: data.groups[groupMenu.groupId]?.collapsed ? 'Expand group' : 'Collapse group', onSelect: () => commit((s) => setGroupCollapsed(s, groupMenu.groupId)) },
               { label: 'Colour, icon, browsers…', onSelect: () => setStyleGroupId(groupMenu.groupId) },
+              ...tabMenuItems(settings, updateSettings, groupMenu.groupId),
               { label: data.groups[groupMenu.groupId]?.promoted ? 'Remove group from Preferred' : '★ Promote group to Preferred',
                 onSelect: () => commit((s) => setGroupPromoted(s, groupMenu.groupId, !s.groups[groupMenu.groupId]?.promoted),
                   data.groups[groupMenu.groupId]?.promoted ? 'Group is back in the list.' : 'Group promoted: its bookmarks are now in Preferred and the group is hidden (see 👁 Hidden).') },
@@ -389,7 +406,7 @@ export function App() {
               } },
             { label: menu.bookmark.preferred ? 'Remove from preferred' : '★ Set as preferred',
               onSelect: () => commit((s) => setPreferred(s, menu.bookmark.id, !menu.bookmark.preferred, Date.now())) },
-            ...(menu.bookmark.preferred ? [
+            ...(advanced && menu.bookmark.preferred ? [
               { label: 'Move earlier in Preferred', onSelect: () => commit((s) => movePreferred(s, menu.bookmark.id, preferredBookmarks(s).findIndex((x) => x.id === menu.bookmark.id) - 1)) },
               { label: 'Move later in Preferred', onSelect: () => commit((s) => movePreferred(s, menu.bookmark.id, preferredBookmarks(s).findIndex((x) => x.id === menu.bookmark.id) + 1)) },
             ] : []),
@@ -397,7 +414,7 @@ export function App() {
               ...(menu.bookmark.groupId !== null ? [{ label: 'Ungrouped', onSelect: () => commit((s) => updateBookmark(s, menu.bookmark.id, { groupId: null }, Date.now())) }] : []),
               ...groups.filter((g) => g.id !== menu.bookmark.groupId).map((g) => ({ label: g.name, onSelect: () => commit((s) => updateBookmark(s, menu.bookmark.id, { groupId: g.id }, Date.now())) })),
             ] },
-            ...(isHiddenFlag(menu.bookmark, now)
+            ...(!advanced ? [] : isHiddenFlag(menu.bookmark, now)
               ? [{ label: 'Unhide', onSelect: () => commit((s) => setBookmarkHidden(s, menu.bookmark.id, false, null, Date.now())) }]
               : [{ label: 'Hide…', children: HIDE_CHOICES.map((c) => ({
                   label: c.label,
@@ -421,6 +438,7 @@ export function App() {
       )}
 
       {styleGroupId && <GroupStyleDialog groupId={styleGroupId} onClose={() => setStyleGroupId(null)} />}
+      {tabsOpen && <TabsDialog onClose={() => setTabsOpen(false)} />}
       {dataOpen && <DataDialog onClose={() => { setDataOpen(false); settingsBtn.current?.focus(); }} />}
       {settingsOpen && (
         <SettingsDialog

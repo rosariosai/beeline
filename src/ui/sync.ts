@@ -43,7 +43,7 @@ interface Io {
 }
 
 export function useSync() {
-  const { db, settings, getData, commit, updateSettings, allData: data } = useStore();
+  const { db, rawSettings: settings, getData, commit, updateSettings, allData: data } = useStore();
   const [scope, setScopeState] = useState<SyncScope>(DEFAULT_SCOPE);
   const scopeRef = useRef<SyncScope>(DEFAULT_SCOPE);
   const [status, setStatus] = useState<SyncStatus>({ linked: false, fileName: null, allowed: false, busy: false, lastSyncAt: null, error: null, message: null });

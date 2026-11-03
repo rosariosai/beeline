@@ -17,7 +17,7 @@ interface Source {
 }
 
 export function DataDialog(props: { onClose(): void }) {
-  const { allData: data, settings, commit, updateSettings } = useStore();
+  const { allData: data, rawSettings, commit, updateSettings } = useStore();
   const ref = useRef<HTMLDialogElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState<Source | null>(null);
@@ -86,7 +86,7 @@ export function DataDialog(props: { onClose(): void }) {
       if (source.backup && mode === 'replace') {
         const backup = source.backup;
         commit(() => stateFromExport(backup), 'Replaced everything with the backup.');
-        updateSettings(backup.settings);
+        { const { mode: _keep, ...rest } = backup.settings; updateSettings(rest); } // the mode is a choice of this browser, not part of a backup
       } else {
         const g = plan.newGroups.length;
         commit((s) => {
@@ -101,7 +101,7 @@ export function DataDialog(props: { onClose(): void }) {
   const exportJson = async () => {
     setBusy(true);
     try {
-      const file = buildExportFile(data, settings, await exportAllImages(), new Date());
+      const file = buildExportFile(data, rawSettings, await exportAllImages(), new Date());
       downloadText(`beeline-backup-${today()}.json`, JSON.stringify(file, null, 2), 'application/json');
     } finally { setBusy(false); }
   };

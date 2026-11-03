@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { applyDiff, getBrowserOverride, getDocLinksSeeded, getExtLinksSeeded, getTopSeeded, loadAll, openDb, saveDocLinksSeeded, saveExtLinksSeeded, saveTopSeeded } from '../data/db';
+import { saveSettings, applyDiff, getBrowserOverride, getDocLinksSeeded, getExtLinksSeeded, getTopSeeded, loadAll, openDb, saveDocLinksSeeded, saveExtLinksSeeded, saveTopSeeded } from '../data/db';
 import { diffState, ensureBrowserTopGroups, ensureDocLinks, ensureExtensionLinks, migrateDocLinks, migrateExtensionLinks } from '../core/ops';
 import { dedupeTopGroups } from '../core/topgroups';
 import { newId } from '../core/id';
@@ -17,6 +17,8 @@ async function boot() {
   try {
     const db = await openDb();
     let { state, settings } = await loadAll(db);
+    // Remember the mode chosen for this profile (existing installs were put in Advanced by loadAll).
+    if (!((await db.get('meta', 'settings')) as { mode?: string } | undefined)?.mode) await saveSettings(db, settings).catch(() => undefined);
     // Once per browser profile: make sure the three per-browser top groups exist (empty is fine). If you delete one later it stays deleted.
     if (!(await getTopSeeded(db).catch(() => true))) {
       const seeded = ensureBrowserTopGroups(state, newId, Date.now());

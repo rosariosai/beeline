@@ -20,7 +20,7 @@ export function BookmarkDialog(props: {
   onClose(): void;
 }) {
   const { editing } = props;
-  const { settings } = useStore();
+  const { settings, advanced } = useStore();
   const ref = useRef<HTMLDialogElement>(null);
   const [url, setUrl] = useState(editing?.url ?? '');
   const [title, setTitle] = useState(editing?.title ?? '');
@@ -63,9 +63,9 @@ export function BookmarkDialog(props: {
         <label>Title
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={settings.defaultTitle ? 'Optional: empty shows the site name' : 'Optional: empty shows only the icon'} />
         </label>
-        <label><span>Short label <span className="optional">(optional)</span></span>
+        {advanced && <label><span>Short label <span className="optional">(optional)</span></span>
           <input value={description} onChange={(e) => setDescription(e.target.value)} maxLength={60} />
-        </label>
+        </label>}
         <label>Group
           <select value={groupId ?? ''} onChange={(e) => setGroupId(e.target.value || null)}>
             <option value="">Ungrouped</option>
@@ -76,19 +76,19 @@ export function BookmarkDialog(props: {
           <input type="checkbox" checked={preferred} onChange={(e) => setPreferred(e.target.checked)} />
           <span><span className="launch-star" aria-hidden>★</span> Preferred <span className="optional">: show it as a large button at the top</span></span>
         </label>
-        <label>Visibility
+        {advanced && <label>Visibility
           <select value={hide} onChange={(e) => setHide(e.target.value)}>
             {nowHidden && <option value="keep">Hidden (keep as it is)</option>}
             <option value="show">Visible</option>
             <option value="forever">Hidden until I unhide it</option>
             {HIDE_CHOICES.filter((c) => c.days !== null).map((c) => <option key={c.days} value={String(c.days)}>{c.label.replace('Hide', 'Hidden')}</option>)}
           </select>
-        </label>
+        </label>}
         <IconEditor url={url} title={title} value={iconDraft} onChange={setIconDraft} />
-        <div className="field">
+        {advanced && <div className="field">
           <span className="field-label">Tags</span>
           <TagInput value={tagNames} onChange={setTagNames} suggestions={sortedTags(props.data).map((t) => t.name)} />
-        </div>
+        </div>}
         <div className="dialog-actions">
           <button type="button" className="btn" onClick={() => ref.current?.close()}>Cancel</button>
           <button type="submit" className="btn btn--primary" disabled={saving}>{editing ? 'Save' : 'Add'}</button>

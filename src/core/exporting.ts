@@ -1,4 +1,5 @@
 // Export / backup formats: Tilenest JSON (full fidelity) and Netscape HTML (standard bookmark file).
+import { cleanTabs, clampScale } from './tabs';
 import type { Bookmark, BrowserId, DataState, Group, IconSpec, Settings, Tag } from './types';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION } from './types';
 import { bookmarksIn, sortedGroups } from './ops';
@@ -113,6 +114,7 @@ export function parseExportFile(text: string): ParseResult {
   if (dropped) warnings.push(`${dropped} invalid ${dropped === 1 ? 'entry was' : 'entries were'} skipped.`);
   const st = isObj(raw.settings) ? raw.settings : {};
   const settings: Settings = {
+    mode: st.mode === 'advanced' || st.mode === 'simple' ? st.mode : DEFAULT_SETTINGS.mode,
     theme: st.theme === 'light' || st.theme === 'dark' || st.theme === 'system' ? st.theme : DEFAULT_SETTINGS.theme,
     tileSize: st.tileSize === 's' || st.tileSize === 'm' || st.tileSize === 'l' ? st.tileSize : DEFAULT_SETTINGS.tileSize,
     defaultTitle: typeof st.defaultTitle === 'boolean' ? st.defaultTitle : DEFAULT_SETTINGS.defaultTitle,
@@ -130,6 +132,10 @@ export function parseExportFile(text: string): ParseResult {
     showTags: typeof st.showTags === 'boolean' ? st.showTags : DEFAULT_SETTINGS.showTags,
     customIcons: Array.isArray(st.customIcons) ? [...new Set(st.customIcons.filter((x): x is string => typeof x === 'string' && x.trim().length > 0 && x.length <= 16).map((x) => x.trim()))].slice(0, 60) : [],
     lastGroupId: str(st.lastGroupId) && groupIds.has(st.lastGroupId) ? st.lastGroupId : null,
+    tabs: cleanTabs(st.tabs, groupIds),
+    showAllTab: typeof st.showAllTab === 'boolean' ? st.showAllTab : DEFAULT_SETTINGS.showAllTab,
+    preferredScale: clampScale(st.preferredScale),
+    activeTabId: str(st.activeTabId) ? st.activeTabId : null,
   };
   const file: ExportFile = { app: 'tilenest', schemaVersion: raw.schemaVersion, exportedAt: str(raw.exportedAt) ? raw.exportedAt : '', settings, groups, tags, bookmarks, images };
   // Backups made by the full Tilenest (with calendar notes) are accepted; the calendar part is simply ignored.

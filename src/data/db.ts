@@ -39,7 +39,9 @@ export async function loadAll(db: Db): Promise<{ state: DataState; settings: Set
   for (const b of bookmarks) state.bookmarks[b.id] = b;
   for (const g of groups) state.groups[g.id] = g;
   for (const t of tags) state.tags[t.id] = t;
-  return { state, settings: { ...DEFAULT_SETTINGS, ...settings } };
+  // Installs that already have data or saved settings (before modes existed) keep every feature: they start in Advanced.
+  const mode = settings?.mode ?? (settings || bookmarks.length || groups.length ? 'advanced' : 'simple');
+  return { state, settings: { ...DEFAULT_SETTINGS, ...settings, mode } };
 }
 
 /** Applies a diff atomically (single transaction). */
