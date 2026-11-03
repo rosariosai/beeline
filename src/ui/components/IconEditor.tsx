@@ -3,7 +3,8 @@ import type { IconSpec } from '../../core/types';
 import { GLYPHS, ICON_COLORS, ICON_COLOR_NAMES, LETTER_GLYPH } from '../../core/icons';
 import { cropRect, fetchImageBlob, loadImageFromBlob, renderCrop, saveImageBlob, type Crop, type LoadedImage } from '../images';
 import { Cropper } from './Cropper';
-import { GlyphSvg, TileIcon } from './TileIcon';
+import { GlyphSvg, MarkChar, TileIcon } from './TileIcon';
+import type { Mark } from '../../core/mark';
 
 export type IconDraft =
   | { kind: 'auto' }
@@ -33,7 +34,7 @@ function CropPreview({ image, crop }: { image: LoadedImage; crop: Crop }) {
 
 const TABS = [['auto', 'Site icon'], ['image', 'Image'], ['builtin', 'Built-in']] as const;
 
-export function IconEditor(props: { url: string; title: string; value: IconDraft; onChange(v: IconDraft): void }) {
+export function IconEditor(props: { url: string; title: string; value: IconDraft; onChange(v: IconDraft): void; mark?: Mark }) {
   const { value, onChange } = props;
   const [urlText, setUrlText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -83,8 +84,8 @@ export function IconEditor(props: { url: string; title: string; value: IconDraft
       <div className="iconeditor-head">
         <div className="iconeditor-preview" style={{ ['--icon' as string]: '64px' }}>
           {value.kind === 'image' && value.pending
-            ? <CropPreview image={value.pending.image} crop={value.pending.crop} />
-            : <TileIcon bookmark={{ url: props.url || 'https://example.com', title: props.title, icon: previewIcon }} />}
+            ? <><CropPreview image={value.pending.image} crop={value.pending.crop} /><MarkChar mark={props.mark} /></>
+            : <TileIcon bookmark={{ url: props.url || 'https://example.com', title: props.title, icon: previewIcon, mark: props.mark }} />}
         </div>
         <div className="tabs" role="tablist" aria-label="Icon type">
           {TABS.map(([k, label]) => (

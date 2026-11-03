@@ -1,6 +1,7 @@
 // Pure state transitions. Every op returns a NEW DataState and keeps untouched
 // records by reference, so `diffState` can detect changes with `===`.
 import type { Bookmark, BrowserId, DataState, Group, IconSpec } from './types';
+import type { Mark } from './mark';
 import { BROWSERS } from './types';
 
 const byOrder = <T extends { order: number }>(a: T, b: T) => a.order - b.order;
@@ -19,6 +20,7 @@ export interface NewBookmark {
   groupId: string | null;
   tagIds?: string[];
   icon?: IconSpec;
+  mark?: Mark;
 }
 
 export function addBookmark(s: DataState, input: NewBookmark, id: string, now: number): DataState {
@@ -32,6 +34,7 @@ export function addBookmark(s: DataState, input: NewBookmark, id: string, now: n
     order: siblings.length ? siblings[siblings.length - 1].order + 1 : 0,
     tagIds: input.tagIds ?? [],
     icon: input.icon ?? { kind: 'auto' },
+    ...(input.mark ? { mark: { ...input.mark } } : {}),
     createdAt: now,
     updatedAt: now,
   };
@@ -48,7 +51,7 @@ export function duplicateBookmark(s: DataState, id: string, newBmId: string, now
   }
   bookmarks[newBmId] = {
     id: newBmId, url: src.url, title: `${src.title || src.url} (copy)`, description: src.description,
-    groupId: src.groupId, order: src.order + 1, tagIds: [...src.tagIds], icon: { ...src.icon },
+    groupId: src.groupId, order: src.order + 1, tagIds: [...src.tagIds], icon: { ...src.icon }, ...(src.mark ? { mark: { ...src.mark } } : {}),
     createdAt: now, updatedAt: now,
   };
   return { ...s, bookmarks };

@@ -3,6 +3,8 @@ export type IconSpec =
   | { kind: 'image'; imageId: string }
   | { kind: 'builtin'; glyph: string; color: string };
 
+import type { Mark } from './mark';
+
 export interface Bookmark {
   id: string;
   url: string;
@@ -12,6 +14,8 @@ export interface Bookmark {
   order: number;
   tagIds: string[];
   icon: IconSpec;
+  /** Optional one-character label in the centre of the icon (tells apart bookmarks that share an icon). */
+  mark?: Mark;
   createdAt: number;
   updatedAt: number;
   /** Hidden from the dashboard (not deleted). With hiddenUntil it comes back by itself on that date. */

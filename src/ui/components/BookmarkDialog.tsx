@@ -6,9 +6,10 @@ import { useStore } from '../store';
 import { sortedTags } from '../../core/tags';
 import { TagInput } from './TagInput';
 import { isHiddenFlag, HIDE_CHOICES } from '../../core/hidden';
+import { DEFAULT_MARK_COLOR, MARK_COLORS, type Mark, type MarkColor } from '../../core/mark';
 import { IconEditor, draftFromIcon, resolveIcon, type IconDraft } from './IconEditor';
 
-export interface BookmarkFormValue { url: string; title: string; description: string; groupId: string | null; tagNames: string[]; icon: IconSpec; preferred: boolean;
+export interface BookmarkFormValue { url: string; title: string; description: string; groupId: string | null; tagNames: string[]; icon: IconSpec; mark?: Mark; preferred: boolean;
   /** undefined = leave as it is; 'show' = unhide; otherwise hide for that many days ('forever' = until unhidden) */
   hide?: 'show' | 'forever' | number }
 
@@ -30,6 +31,9 @@ export function BookmarkDialog(props: {
   const [iconDraft, setIconDraft] = useState<IconDraft>(() => draftFromIcon(editing?.icon ?? { kind: 'auto' }));
   const nowHidden = !!editing && isHiddenFlag(editing, Date.now());
   const [hide, setHide] = useState<string>(nowHidden ? 'keep' : 'show');
+  const [markChar, setMarkChar] = useState(editing?.mark?.char ?? '');
+  const [markColor, setMarkColor] = useState<MarkColor>(editing?.mark?.color ?? DEFAULT_MARK_COLOR);
+  const mark: Mark | undefined = markChar ? { char: markChar, color: markColor } : undefined;
   const [preferred, setPreferred] = useState(!!editing?.preferred);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +47,7 @@ export function BookmarkDialog(props: {
     setSaving(true);
     try {
       const icon = await resolveIcon(iconDraft);
-      props.onSave({ url: clean, title: title.trim(), description: description.trim(), groupId, tagNames, icon, preferred,
+      props.onSave({ url: clean, title: title.trim(), description: description.trim(), groupId, tagNames, icon, mark: advanced ? mark : editing?.mark, preferred,
         hide: hide === 'keep' ? undefined : hide === 'show' || hide === 'forever' ? hide : Number(hide) });
     } catch (err) {
       setSaving(false);
@@ -84,7 +88,22 @@ export function BookmarkDialog(props: {
             {HIDE_CHOICES.filter((c) => c.days !== null).map((c) => <option key={c.days} value={String(c.days)}>{c.label.replace('Hide', 'Hidden')}</option>)}
           </select>
         </label>}
-        <IconEditor url={url} title={title} value={iconDraft} onChange={setIconDraft} />
+        <IconEditor url={url} title={title} value={iconDraft} onChange={setIconDraft} mark={advanced ? mark : editing?.mark} />
+        {advanced && <fieldset className="markeditor">
+          <legend className="field-label">Label on the icon <span className="optional">(optional)</span></legend>
+          <p className="hint">One character in front of the icon, to tell apart bookmarks that share the same icon, for example server 1, 2 and 3.</p>
+          <div className="markeditor-row">
+            <input className="markeditor-input" value={markChar} aria-label="Label character" maxLength={4} autoComplete="off" spellCheck={false}
+              placeholder="1" onChange={(e) => setMarkChar(Array.from(e.target.value.trim()).slice(-1)[0] ?? '')} />
+            <div className="markeditor-colors" role="radiogroup" aria-label="Label colour">
+              {MARK_COLORS.map((c) => (
+                <button key={c.id} type="button" role="radio" aria-checked={markColor === c.id} aria-label={`${c.label} label`} title={c.label}
+                  className={`mark-swatch${markColor === c.id ? ' mark-swatch--on' : ''}`} style={{ background: c.hex }} onClick={() => setMarkColor(c.id)} />
+              ))}
+            </div>
+            {markChar && <button type="button" className="btn btn--sm" onClick={() => setMarkChar('')}>Remove</button>}
+          </div>
+        </fieldset>}
         {advanced && <div className="field">
           <span className="field-label">Tags</span>
           <TagInput value={tagNames} onChange={setTagNames} suggestions={sortedTags(props.data).map((t) => t.name)} />

@@ -1,6 +1,7 @@
 // Export / backup formats: Tilenest JSON (full fidelity) and Netscape HTML (standard bookmark file).
 import { cleanTabs, clampScale } from './tabs';
 import type { Bookmark, BrowserId, DataState, Group, IconSpec, Settings, Tag } from './types';
+import { cleanMark, type Mark } from './mark';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION } from './types';
 import { bookmarksIn, sortedGroups } from './ops';
 import type { ImportedBookmark } from './importing';
@@ -48,6 +49,10 @@ function cleanIcon(x: unknown, imageIds: Set<string>): IconSpec {
 export type ParseResult = { ok: true; file: ExportFile; warnings: string[] } | { ok: false; error: string };
 
 /** Strict about structure, forgiving about content: bad records are dropped with a warning, never trusted blindly. */
+function markOf(o: Record<string, unknown>): { mark?: Mark } {
+  const mark = cleanMark(o.mark);
+  return mark ? { mark } : {};
+}
 function usageOf(o: Record<string, unknown>): Partial<Bookmark> {
   const out: Partial<Bookmark> = {};
   if (o.preferred === true) { out.preferred = true; out.preferredOrder = num(o.preferredOrder) ? o.preferredOrder : 0; }
@@ -107,6 +112,7 @@ export function parseExportFile(text: string): ParseResult {
       icon: cleanIcon(b.icon, imageIds),
       createdAt: num(b.createdAt) ? b.createdAt : 0,
       updatedAt: num(b.updatedAt) ? b.updatedAt : 0,
+      ...markOf(b),
       ...hiddenOf(b),
       ...usageOf(b),
     });
