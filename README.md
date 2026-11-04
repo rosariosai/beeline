@@ -10,6 +10,10 @@ Use it as a plain bookmark page, or as a quick personal start page or lab dashbo
 
 The story of how Beeline is being built, one step at a time with AI, is on the blog [The Daily Calf](https://rosariosai.substack.com).
 
+## Brochure
+
+A two-page A4 brochure (PDF), made with AI help: [docs/brochure/beeline-brochure.pdf](docs/brochure/beeline-brochure.pdf). How it was made: [the blog post](https://rosariosai.substack.com).
+
 ## Screenshots
 
 Simple by default (Chrome, dark theme, sample data):
