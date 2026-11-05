@@ -51,7 +51,12 @@ Instant search:
 - Import from the browser, a bookmarks HTML file or a JSON backup; export a backup at any time.
 - **Sync between Chrome and Brave** through one file in a folder you choose (for example a cloud-drive folder). Firefox cannot keep a file linked, so use backup and import there.
 
-## Install (from source)
+## Install
+
+- **Chrome and Brave:** [Beeline on the Chrome Web Store](https://chromewebstore.google.com/detail/beeline-%E2%80%94-bookmark-dashbo/jliligpephbbdhejkhipflpdefapgbeo)
+- **Firefox:** [Beeline on Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/beeline-bookmark-dashboard/)
+
+### From source
 
 Requires Node.js 20 or newer.
 
@@ -61,7 +66,7 @@ Requires Node.js 20 or newer.
 - **Chrome / Brave:** open `chrome://extensions` (or `brave://extensions`), turn on Developer mode, **Load unpacked**, choose `dist/chrome`, open a new tab.
 - **Firefox:** open `about:debugging#/runtime/this-firefox`, **Load Temporary Add-on...**, choose `dist/firefox/manifest.json`. Firefox forgets temporary add-ons when it closes.
 
-More detail, sync and settings: [docs/INSTALL.md](docs/INSTALL.md). Store listings are not published yet.
+More detail, sync and settings: [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Develop
 
