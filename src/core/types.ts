@@ -1,6 +1,6 @@
 export type IconSpec =
   | { kind: 'auto' }
-  | { kind: 'image'; imageId: string }
+  | { kind: 'image'; imageId: string; /** Address the image was downloaded from, kept so it can be copied again. */ sourceUrl?: string }
   | { kind: 'builtin'; glyph: string; color: string };
 
 import type { Mark } from './mark';

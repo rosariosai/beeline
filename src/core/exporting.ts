@@ -38,10 +38,19 @@ const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object
 const str = (x: unknown): x is string => typeof x === 'string';
 const num = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
 
+/** Keep only a plain http(s) address of reasonable length; anything else is dropped. */
+export function cleanSourceUrl(x: unknown): string | undefined {
+  if (!str(x) || x.length > 2000) return undefined;
+  try { const u = new URL(x.trim()); return u.protocol === 'https:' || u.protocol === 'http:' ? u.toString() : undefined; } catch { return undefined; }
+}
+
 function cleanIcon(x: unknown, imageIds: Set<string>): IconSpec {
   if (isObj(x)) {
     if (x.kind === 'builtin' && str(x.glyph) && str(x.color)) return { kind: 'builtin', glyph: x.glyph, color: x.color };
-    if (x.kind === 'image' && str(x.imageId) && imageIds.has(x.imageId)) return { kind: 'image', imageId: x.imageId };
+    if (x.kind === 'image' && str(x.imageId) && imageIds.has(x.imageId)) {
+      const sourceUrl = cleanSourceUrl(x.sourceUrl);
+      return sourceUrl ? { kind: 'image', imageId: x.imageId, sourceUrl } : { kind: 'image', imageId: x.imageId };
+    }
   }
   return { kind: 'auto' };
 }

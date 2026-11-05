@@ -2,7 +2,7 @@
 
 A visual bookmark dashboard for your browser's New Tab page. Chrome, Brave and Firefox. Local-first: no account, no server, no tracking.
 
-> Status: **beta** (v2.6.2). Used daily in Chrome and Brave; the Firefox build works but has less testing and no automatic sync.
+> Status: **beta** (v2.7.0). Used daily in Chrome and Brave; the Firefox build works but has less testing and no automatic sync.
 >
 > **Desktop only for now.** Beeline is a desktop-browser extension (Chrome, Brave, Firefox on Windows, macOS and Linux). Phones and tablets are not supported in this release; the layout adapts to narrow windows and has touch gestures, but there is no mobile app or web version yet.
 

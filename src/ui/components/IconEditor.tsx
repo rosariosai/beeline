@@ -9,17 +9,21 @@ import type { Mark } from '../../core/mark';
 export type IconDraft =
   | { kind: 'auto' }
   | { kind: 'builtin'; glyph: string; color: string }
-  | { kind: 'image'; imageId?: string; pending?: { image: LoadedImage; crop: Crop } };
+  | { kind: 'image'; imageId?: string; sourceUrl?: string; pending?: { image: LoadedImage; crop: Crop; sourceUrl?: string } };
 
 export const draftFromIcon = (i: IconSpec): IconDraft =>
-  i.kind === 'image' ? { kind: 'image', imageId: i.imageId } : i.kind === 'builtin' ? { ...i } : { kind: 'auto' };
+  i.kind === 'image' ? { kind: 'image', imageId: i.imageId, sourceUrl: i.sourceUrl } : i.kind === 'builtin' ? { ...i } : { kind: 'auto' };
 
 /** Turn the editor state into a stored icon (cropping and saving a new image if needed). */
 export async function resolveIcon(d: IconDraft): Promise<IconSpec> {
   if (d.kind === 'auto') return { kind: 'auto' };
   if (d.kind === 'builtin') return { kind: 'builtin', glyph: d.glyph, color: d.color };
-  if (d.pending) return { kind: 'image', imageId: await saveImageBlob(await renderCrop(d.pending.image, d.pending.crop)) };
-  return d.imageId ? { kind: 'image', imageId: d.imageId } : { kind: 'auto' };
+  if (d.pending) {
+    const imageId = await saveImageBlob(await renderCrop(d.pending.image, d.pending.crop));
+    return d.pending.sourceUrl ? { kind: 'image', imageId, sourceUrl: d.pending.sourceUrl } : { kind: 'image', imageId };
+  }
+  if (!d.imageId) return { kind: 'auto' };
+  return d.sourceUrl ? { kind: 'image', imageId: d.imageId, sourceUrl: d.sourceUrl } : { kind: 'image', imageId: d.imageId };
 }
 
 /** Live thumbnail of exactly what will be saved. */
@@ -39,15 +43,16 @@ export function IconEditor(props: { url: string; title: string; value: IconDraft
   const [urlText, setUrlText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const last = useRef<{ builtin: IconDraft & { kind: 'builtin' } }>({ builtin: { kind: 'builtin', glyph: 'star', color: ICON_COLORS[0] } });
   if (value.kind === 'builtin') last.current.builtin = value;
 
-  const takeBlob = async (blob: Blob) => {
+  const takeBlob = async (blob: Blob, sourceUrl?: string) => {
     setBusy(true); setError('');
     try {
       const image = await loadImageFromBlob(blob);
-      onChange({ kind: 'image', imageId: value.kind === 'image' ? value.imageId : undefined, pending: { image, crop: { zoom: 1, ox: 0, oy: 0 } } });
+      onChange({ kind: 'image', imageId: value.kind === 'image' ? value.imageId : undefined, sourceUrl: value.kind === 'image' ? value.sourceUrl : undefined, pending: { image, crop: { zoom: 1, ox: 0, oy: 0 }, sourceUrl } });
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not load that image.'); }
     finally { setBusy(false); }
   };
@@ -65,7 +70,7 @@ export function IconEditor(props: { url: string; title: string; value: IconDraft
 
   const fromUrl = async () => {
     setBusy(true); setError('');
-    try { await takeBlob(await fetchImageBlob(urlText)); setUrlText(''); }
+    try { const address = urlText.trim(); await takeBlob(await fetchImageBlob(address), new URL(address).toString()); setUrlText(''); }
     catch (e) { setError(e instanceof Error ? e.message : 'Could not download that image.'); setBusy(false); }
   };
 
@@ -75,6 +80,8 @@ export function IconEditor(props: { url: string; title: string; value: IconDraft
     else if (k === 'builtin') onChange(last.current.builtin);
     else onChange(value.kind === 'image' ? value : { kind: 'image' });
   };
+
+  const shownSource = value.kind === 'image' ? (value.pending ? value.pending.sourceUrl : value.sourceUrl) : undefined;
 
   const previewIcon: IconSpec = value.kind === 'image' ? (value.imageId ? { kind: 'image', imageId: value.imageId } : { kind: 'auto' }) : value.kind === 'builtin' ? value : { kind: 'auto' };
 
@@ -100,7 +107,7 @@ export function IconEditor(props: { url: string; title: string; value: IconDraft
         <div className="iconeditor-panel">
           {value.pending ? (
             <Cropper image={value.pending.image} crop={value.pending.crop}
-              onChange={(crop) => onChange({ ...value, pending: { image: value.pending!.image, crop } })} />
+              onChange={(crop) => onChange({ ...value, pending: { ...value.pending!, crop } })} />
           ) : (
             <div className="dropzone dropzone--file"
               onDragOver={(e) => e.preventDefault()}
@@ -112,13 +119,20 @@ export function IconEditor(props: { url: string; title: string; value: IconDraft
             </div>
           )}
           {value.pending && (
-            <button type="button" className="btn btn--sm" onClick={() => onChange({ kind: 'image', imageId: value.imageId })}>Choose a different image</button>
+            <button type="button" className="btn btn--sm" onClick={() => onChange({ kind: 'image', imageId: value.imageId, sourceUrl: value.sourceUrl })}>Choose a different image</button>
           )}
           {!value.pending && (
             <div className="urlrow">
               <input value={urlText} onChange={(e) => setUrlText(e.target.value)} placeholder="…or paste an image address (https://…)" aria-label="Image address"
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); if (urlText.trim()) void fromUrl(); } }} />
               <button type="button" className="btn" disabled={busy || !urlText.trim()} onClick={() => void fromUrl()}>{busy ? 'Loading…' : 'Load'}</button>
+            </div>
+          )}
+          {shownSource && <p className="hint" style={{ marginBottom: 0 }}>Original image address (this image was loaded from here):</p>}
+          {shownSource && (
+            <div className="urlrow">
+              <input value={shownSource} readOnly aria-label="Original image address" onFocus={(e) => e.currentTarget.select()} />
+              <button type="button" className="btn" onClick={() => { void navigator.clipboard?.writeText(shownSource).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {}); }}>{copied ? 'Copied' : 'Copy address'}</button>
             </div>
           )}
           {error && <p className="field-error" role="alert">{error}</p>}

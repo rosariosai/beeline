@@ -2,7 +2,7 @@
 source: claude
 date: 2026-11-01
 status: draft
-summary: How to install Beeline (v2.6.2) in Chrome, Brave and Firefox, how to update it, how to sync between browsers, and a tour of every feature.
+summary: How to install Beeline (v2.7.0) in Chrome, Brave and Firefox, how to update it, how to sync between browsers, and a tour of every feature.
 tags: [tilenest, bookmarks, install, chrome, brave, firefox]
 ---
 # Installing Beeline (formerly Tilenest Bookmarks)
@@ -157,6 +157,10 @@ Layout (Big tiles, Compact list, Icons only), size (Small, Medium, Large), group
 - **Tabs**: open the View menu > **Tabs > Add tabs** (later *Edit tabs*), or the **✎ Edit tabs** button at the right of the tab bar. Add 2 to 5 tabs, name them (for example *Work*, *Free time*, *Media*), and tick in the grid which groups belong to which tab. A group can be in several tabs. Untick *Keep an All tab first* if you want only your own tabs; groups that are in no tab then appear under an automatic **Other** tab. To move one group quickly, use its menu (⋯ in the sidebar, or 🙈 Hide… button) > **Show in tab…**. **Drag and drop**: drag a group from the side panel onto a tab with the left button to copy it into that tab, or with the right button to move it (it leaves the tab you are on). A group created while a tab is open is added to that tab. The Preferred bar stays above every tab; search always looks in all tabs. Removing every tab brings back the plain dashboard.
 - **Preferred size**: View menu > **Preferred size** slider. 1× = the same size as your other bookmarks, up to 4×. The size follows the layout and size you chose (Tiles, List, Icons; Small, Medium, Large).
 - The **Groups** heading in the sidebar shows how many groups you have (and "2 of 8" when a tab shows only some).
+
+## Keeping the address of an image (2.7.0)
+
+When you set an icon from a web address (Edit bookmark > Icon > **Image** > *…or paste an image address* > **Load**), Beeline copies the image into your browser and also remembers the address. It is shown under the icon as **Original image address** with a **Copy address** button, so you can paste it into another bookmark, a document or a chat. Images from a file or the clipboard have no address, so nothing is shown. The address is kept in backups and sync.
 
 ## Label on the icon (2.6.2)
 

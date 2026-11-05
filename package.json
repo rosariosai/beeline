@@ -1,6 +1,6 @@
 {
   "name": "bookmarkonly",
-  "version": "2.6.3",
+  "version": "2.7.0",
   "homepage": "https://github.com/rosariosai/beeline",
   "repository": { "type": "git", "url": "git+https://github.com/rosariosai/beeline.git" },
   "bugs": { "url": "https://github.com/rosariosai/beeline/issues" },
